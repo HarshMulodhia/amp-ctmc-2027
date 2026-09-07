@@ -1,21 +1,28 @@
 [project]
-name = "amp-challenge-2027"
+name = "amp_ctmc_2027"
 version = "0.1.0"
-description = "Minimal example repository"
+description = "CTMC AMP generation pipeline aligned to AMP Challenge format"
 readme = "README.md"
-authors = [
-    { name = "your name", email = "username@domain.com" }
-]
-
-requires-python = ">=3.10"
+requires-python = "==3.11.*"
 dependencies = [
-    "levenshtein>=0.27.3",
-    "numpy>=2.2.6",
+  "biopython>=1.85",
+  "numpy>=2.1.0",
+  "pydantic>=2.11.0",
+  "rapidfuzz>=3.14.0",
+  "torch>=2.8.0",
+  "tqdm>=4.67.0",
+  "wandb>=0.22.0",
+  "xgboost>=3.0.0",
 ]
 
 [project.scripts]
-generate = "amp_challenge_2027.generate:main"
+train = "amp_ctmc_2027.train:main"
+generate = "amp_ctmc_2027.generate:generate_broad_spectrum"
+generate_broad_spectrum = "amp_ctmc_2027.generate:generate_broad_spectrum"
 
 [build-system]
-requires = ["uv_build>=0.9.18,<0.10.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/amp_ctmc_2027"]

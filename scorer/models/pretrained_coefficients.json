@@ -1,0 +1,15 @@
+{
+  "activity_bias": -1.15,
+  "activity_length": 0.04,
+  "activity_charge": 0.22,
+  "activity_hydrophobicity": 1.8,
+  "activity_aromatic": 0.65,
+  "hemolysis_bias": -0.85,
+  "hemolysis_length": 0.03,
+  "hemolysis_charge": 0.08,
+  "hemolysis_hydrophobicity": 2.25,
+  "hemolysis_aromatic": 0.95,
+  "esm2_ppl_base": 16.0,
+  "esm2_ppl_length_scale": 0.12,
+  "esm2_ppl_composition_scale": 10.5
+}
