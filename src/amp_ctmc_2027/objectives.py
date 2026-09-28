@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import itertools
+from dataclasses import dataclass, field
 from typing import Callable, Literal
 
 import numpy as np
@@ -14,6 +15,28 @@ from amp_ctmc_2027.core import CTMCDenoiser
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder
 from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, FeatureStats, PeptideFeatureExtractor
 from amp_ctmc_2027.external_scorer import VendoredScorerClient
+
+
+@dataclass
+class ScoreTable:
+    """Auditable raw, rank-normalized scores with component metadata."""
+    sequences: list[str]
+    columns: dict[str, np.ndarray] = field(default_factory=dict)
+    metadata: dict[str, dict] = field(default_factory=dict)
+
+    def write_csv(self, path) -> None:
+        import csv
+        from pathlib import Path
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        keys = list(self.columns)
+        with temporary.open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.writer(stream)
+            writer.writerow(["sequence", *keys])
+            for i, seq in enumerate(self.sequences):
+                writer.writerow([seq, *(float(self.columns[k][i]) for k in keys)])
+        temporary.replace(path)
 
 
 class ScoringContext:
@@ -44,6 +67,12 @@ class ScoreComponent(abc.ABC):
     """Abstract score component."""
 
     name: str
+    direction: Literal["maximize", "minimize"] = "maximize"
+    required_artifacts: tuple[str, ...] = ()
+    cost_tier: Literal["cheap", "medium", "expensive"] = "cheap"
+    batch_size: int = 1024
+    raw_units: str = "unitless"
+    failure_policy: Literal["raise", "skip_if_zero_weight"] = "raise"
 
     @abc.abstractmethod
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
@@ -63,6 +92,8 @@ class NoveltyScorer(ScoreComponent):
     """Scores by nearest-neighbor normalized edit distance to training set."""
 
     name = "novelty"
+    direction = "maximize"
+    raw_units = "normalized_edit_distance_design_proxy"
 
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
         if not context.training_sequences:
@@ -115,29 +146,43 @@ class QualityScorer(ScoreComponent):
         return (1.0 / (1.0 + penalties)).astype(np.float32)
 
 
-class RealismScorer(ScoreComponent):
-    """Scores denoiser confidence on clean-time reconstructions."""
-
-    name = "realism"
+class MaskedPseudoLikelihoodScorer(ScoreComponent):
+    """Observed-token masked log likelihood from the lightweight student."""
+    name = "masked_pseudo_likelihood"
+    cost_tier = "expensive"
+    raw_units = "mean_log_probability_per_residue"
+    batch_size = 128
 
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
-        encoded = torch.stack([context.encoder.encode(seq) for seq in candidates]).to(next(context.model.parameters()).device)
-        t = torch.ones((encoded.size(0),), device=encoded.device)
-        with torch.inference_mode():
-            logits = context.model(encoded, t)
-            probs = torch.softmax(logits, dim=-1)
-            conf = torch.max(probs, dim=-1).values
-            non_pad = encoded != context.encoder.pad_idx
-            numer = (conf * non_pad).sum(dim=1)
-            denom = non_pad.sum(dim=1).clamp_min(1)
-            score = numer / denom
-        return score.detach().cpu().numpy().astype(np.float32)
+        device = next(context.model.parameters()).device
+        scores: list[float] = []
+        for start in range(0, len(candidates), self.batch_size):
+            encoded = torch.stack([context.encoder.encode(s) for s in candidates[start:start+self.batch_size]]).to(device)
+            batch_scores = torch.zeros(encoded.shape[0], device=device)
+            count = torch.zeros_like(batch_scores)
+            residue_mask = encoded.lt(len(context.encoder.vocab))
+            for pos in range(context.encoder.max_length):
+                selected = residue_mask[:, pos]
+                if not selected.any():
+                    continue
+                masked = encoded[selected].clone()
+                masked[:, pos] = context.encoder.mask_idx
+                t = torch.full((masked.shape[0],), 0.5, device=device)
+                with torch.inference_mode():
+                    logp = torch.log_softmax(context.model(masked, t), dim=-1)
+                target = encoded[selected, pos]
+                batch_scores[selected] += logp[torch.arange(target.numel(), device=device), pos, target]
+                count[selected] += 1
+            scores.extend((batch_scores / count.clamp_min(1)).cpu().tolist())
+        return np.asarray(scores, dtype=np.float32)
 
 
 class ActivityHemolysisScorer(ScoreComponent):
     """Scores candidates using vendored pretrained activity/hemolysis predictions."""
 
     name = "activity_hemolysis"
+    cost_tier = "medium"
+    required_artifacts = ("scorer/models",)
 
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
         if context.external_scorer is None:
@@ -150,6 +195,10 @@ class ESM2PseudoPerplexityScorer(ScoreComponent):
     """Scores candidates from ESM-2 pseudo-perplexity (lower perplexity is better)."""
 
     name = "esm2_pseudo_perplexity"
+    direction = "maximize"
+    cost_tier = "expensive"
+    required_artifacts = ("scorer/models",)
+    raw_units = "negative_pseudo_perplexity"
 
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
         if context.external_scorer is None:
@@ -193,20 +242,59 @@ class MultiObjectiveScorer:
         if not candidates:
             return np.array([], dtype=np.float32)
 
+        active = [c for c in self.components if float(self.weights.get(c.name, 0.0)) > 0.0]
+        if not active:
+            raise ValueError("At least one enabled score component must have a positive weight")
+        for component in active:
+            if component.failure_policy == "raise" and component.required_artifacts and context.external_scorer is None and any("scorer" in p for p in component.required_artifacts):
+                raise RuntimeError(f"Score component {component.name} requires artifacts {component.required_artifacts}")
+
         if self.combine_mode == "geometric":
             return self._score_geometric(candidates, context)
         else:
             return self._score_arithmetic(candidates, context)
+
+    def score_table(self, candidates: list[str], context: ScoringContext) -> ScoreTable:
+        """Evaluate active components and retain raw and rank-normalized columns."""
+        table = ScoreTable(list(candidates))
+        for component in self.components:
+            weight = float(self.weights.get(component.name, 0.0))
+            if weight == 0.0:
+                table.metadata[component.name] = {
+                    "status": "skipped_zero_weight", "weight": 0.0, "model_version": None,
+                    "uncertainty": None, "calibration": None, "failure_state": None,
+                }
+                continue
+            raw = np.asarray(component.score(candidates, context), dtype=np.float32)
+            if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
+                raise ValueError(f"Score component {component.name} returned invalid values")
+            table.columns[f"{component.name}.raw"] = raw
+            oriented = -raw if component.direction == "minimize" else raw
+            table.columns[f"{component.name}.rank"] = self._rank_normalize(oriented)
+            table.metadata[component.name] = {
+                "status": "ok", "weight": weight, "direction": component.direction,
+                "cost_tier": component.cost_tier, "raw_units": component.raw_units,
+                "required_artifacts": list(component.required_artifacts), "failure_policy": component.failure_policy,
+                "model_version": "not_recorded", "uncertainty": "unavailable", "calibration": "not_fitted",
+                "failure_state": None,
+            }
+        return table
 
     def _score_geometric(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
         """Compute weighted geometric mean of component scores."""
         eps = 1e-6
         log_sum = None
         for component in self.components:
+            w = float(self.weights.get(component.name, 0.0))
+            if w == 0:
+                continue
             raw = component.score(candidates, context).astype(np.float32)
+            if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
+                raise ValueError(f"Score component {component.name} returned invalid values")
+            if component.direction == "minimize":
+                raw = -raw
             norm = self._rank_normalize(raw)
             clipped = np.clip(norm, eps, 1.0)
-            w = float(self.weights.get(component.name, 0.0))
             term = w * np.log(clipped)
             log_sum = term if log_sum is None else log_sum + term
         return np.exp(log_sum).astype(np.float32)
@@ -215,9 +303,16 @@ class MultiObjectiveScorer:
         """Compute weighted arithmetic mean of component scores."""
         total = np.zeros(len(candidates), dtype=np.float32)
         for component in self.components:
+            w = float(self.weights.get(component.name, 0.0))
+            if w == 0:
+                continue
             raw = component.score(candidates, context).astype(np.float32)
+            if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
+                raise ValueError(f"Score component {component.name} returned invalid values")
+            if component.direction == "minimize":
+                raw = -raw
             norm = self._rank_normalize(raw)
-            total += float(self.weights.get(component.name, 0.0)) * norm
+            total += w * norm
         return total
 
 

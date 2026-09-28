@@ -15,6 +15,10 @@ dependencies = [
   "xgboost>=3.0.0",
 ]
 
+[project.optional-dependencies]
+data = ["pyarrow>=20.0.0", "PyYAML>=6.0.2"]
+training = ["transformers>=4.55.0"]
+
 [project.scripts]
 train = "amp_ctmc_2027.train:main"
 generate = "amp_ctmc_2027.generate:generate_broad_spectrum"

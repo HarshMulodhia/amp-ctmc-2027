@@ -10,30 +10,26 @@ from amp_ctmc_2027.pipeline.generation_pipeline import GenerationPipeline
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate broad-spectrum AMP challenge outputs")
-    parser.add_argument("--n-sequences", type=int, default=50000)
-    parser.add_argument("--top-k", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--checkpoint", type=Path, default=Path("checkpoint"))
-    parser.add_argument("--known-amps-fasta", type=Path, default=Path("data/training/training.fasta"))
-    parser.add_argument("--antibacterial-fasta", type=Path, default=Path("data/antibacterial.fasta"))
-    parser.add_argument("--device", choices=["auto", "cuda", "mps", "cpu"], default="auto")
+    parser.add_argument("--config", type=Path, default=Path("configs/generate.json"))
+    parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--device", choices=["auto", "cuda", "mps", "cpu"])
+    parser.add_argument("--seed", type=int)
     return parser.parse_args()
 
 
 def generate_broad_spectrum() -> None:
     """Challenge entry point for broad-spectrum generation."""
     args = parse_args()
-    config = AMPConfig(
-        n_sequences=args.n_sequences,
-        top_k=args.top_k,
-        seed=args.seed,
-        generation_batch_size=args.batch_size,
-        checkpoint_dir=args.checkpoint,
-        training_fasta_path=args.known_amps_fasta,
-        antibacterial_fasta_path=args.antibacterial_fasta,
-        device=args.device,
-    )
+    config = AMPConfig.from_json_file(args.config)
+    if args.checkpoint is not None:
+        config.checkpoint_dir = args.checkpoint
+    if args.output_dir is not None:
+        config.generate_dir = args.output_dir
+    if args.device is not None:
+        config.device = args.device
+    if args.seed is not None:
+        config.seed = args.seed
     pipeline = GenerationPipeline(config=config, fasta_repo=FastaRepository(Path.cwd()))
     pipeline.run()
 

@@ -13,6 +13,27 @@ import torch.nn.functional as F
 from amp_ctmc_2027.config import AMPConfig
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder
 
+CONDITION_NAMES = (
+    "amp_probability", "broad_spectrum_probability", "mean_activity_probability",
+    "mean_gram_negative_activity_probability", "mean_gram_positive_activity_probability",
+    "mean_mdr_activity_probability", "hemolysis_probability", "predicted_log2_mic_summary",
+    "predicted_log2_hc50",
+)
+
+
+@dataclass(frozen=True)
+class ConditionVector:
+    """Soft generation targets, observation mask, and optional per-row provenance."""
+    values: torch.Tensor
+    observed: torch.Tensor
+    provenance: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.values.shape != self.observed.shape or self.values.ndim != 2:
+            raise ValueError("condition values and observed mask must have matching [B,C] shapes")
+        if self.values.shape[1] != len(CONDITION_NAMES):
+            raise ValueError(f"conditions must contain {len(CONDITION_NAMES)} fields")
+
 
 class SinusoidalTimeEmbedding(nn.Module):
     """Sinusoidal scalar-time embedding projected to model width."""
@@ -212,6 +233,9 @@ class CTMCDenoiser(nn.Module):
 
         self.token_embedding = nn.Embedding(vocab_size, config.d_model, padding_idx=pad_idx)
         self.time_embedding = SinusoidalTimeEmbedding(config.d_model)
+        self.condition_embedding = nn.Sequential(
+            nn.Linear(config.condition_dim * 2, config.d_model), nn.SiLU(), nn.Linear(config.d_model, config.d_model)
+        )
         self.conv_stem = ConvStem(config.d_model, kernel_size=7, dropout=config.dropout)
 
         self.encoder = AdaLNEncoder(
@@ -243,32 +267,49 @@ class CTMCDenoiser(nn.Module):
             with torch.no_grad():
                 self.token_embedding.weight[self.token_embedding.padding_idx].zero_()
 
-    def encode_hidden(self, x_t: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def encode_hidden(self, x_t: torch.Tensor, t: torch.Tensor, conditions: ConditionVector | None = None) -> torch.Tensor:
         """Return hidden states with shape [B, L, d_model]."""
         hidden = self.token_embedding(x_t)
         pad_mask = x_t.eq(self.pad_idx)
         hidden = self.conv_stem(hidden, pad_mask)
         t_emb = self.time_embedding(t)
+        if conditions is not None:
+            if conditions.values.shape[0] != x_t.shape[0]:
+                raise ValueError("condition batch size must match token batch size")
+            values = conditions.values.to(device=x_t.device, dtype=hidden.dtype)
+            observed = conditions.observed.to(device=x_t.device, dtype=hidden.dtype)
+            t_emb = t_emb + self.condition_embedding(torch.cat([values * observed, observed], dim=-1))
         return self.encoder(hidden, t_emb, pad_mask)
 
-    def forward(self, x_t: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def forward(self, x_t: torch.Tensor, t: torch.Tensor, conditions: ConditionVector | None = None) -> torch.Tensor:
         """Return per-position vocabulary logits [B, L, V]."""
-        hidden = self.encode_hidden(x_t, t)
+        hidden = self.encode_hidden(x_t, t, conditions)
         return self.output_head(hidden)
 
-    def predict_length_logits(self, x_t: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+    def predict_length_logits(self, x_t: torch.Tensor, t: torch.Tensor, conditions: ConditionVector | None = None) -> torch.Tensor:
         """Predict target length logits [B, num_lengths]."""
-        hidden = self.encode_hidden(x_t, t)
+        hidden = self.encode_hidden(x_t, t, conditions)
         pad_mask = x_t.eq(self.pad_idx)
         valid = (~pad_mask).unsqueeze(-1).float()
         pooled = (hidden * valid).sum(dim=1) / valid.sum(dim=1).clamp_min(1.0)
         return self.length_head(pooled)
 
+    def guided_logits(self, x_t: torch.Tensor, t: torch.Tensor, conditions: ConditionVector | None,
+                      cfg_scale: float = 1.0) -> torch.Tensor:
+        """Classifier-free guidance using the documented conditional/unconditional formula."""
+        if conditions is None or cfg_scale == 0.0:
+            return self(x_t, t)
+        conditional = self(x_t, t, conditions)
+        if cfg_scale == 1.0:
+            return conditional
+        unconditional = self(x_t, t, None)
+        return unconditional + float(cfg_scale) * (conditional - unconditional)
+
     def save(self, path: Path) -> None:
         """Save model state dict atomically."""
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
-        torch.save(self.state_dict(), tmp)
+        torch.save({"checkpoint_version": 2, "canvas_semantics": "residues_plus_eos", "state_dict": self.state_dict()}, tmp)
         tmp.replace(path)
 
     @classmethod
@@ -283,9 +324,45 @@ class CTMCDenoiser(nn.Module):
         """Load a model from checkpoint."""
         model = cls(config=config, vocab_size=vocab_size, pad_idx=pad_idx)
         state = torch.load(path, map_location=device, weights_only=False)
-        model.load_state_dict(state)
+        if not isinstance(state, dict) or state.get("checkpoint_version") != 2 or state.get("canvas_semantics") != "residues_plus_eos":
+            raise ValueError("Unsupported legacy CTMC checkpoint; canvas semantics changed and explicit migration is required")
+        model.load_state_dict(state["state_dict"])
         model.to(device)
         return model
+
+
+def initialize_amino_acid_embeddings(
+    model: CTMCDenoiser,
+    esm_embedding_weight: torch.Tensor,
+    esm_token_ids: dict[str, int],
+    encoder: AMPCanvasEncoder,
+    source_revision: str | None = None,
+) -> dict:
+    """Copy semantically matched ESM amino-acid rows into the student embedding.
+
+    Special-token rows remain independently initialized. A deterministic truncated
+    identity/zero-padded projection is used when hidden widths differ, avoiding an
+    unseeded randomly trained adapter during initialization.
+    """
+    source = esm_embedding_weight.detach().float()
+    target_width = model.token_embedding.embedding_dim
+    if source.ndim != 2:
+        raise ValueError("ESM embedding weight must be [vocabulary, hidden]")
+    if source.shape[1] >= target_width:
+        projection = torch.eye(source.shape[1], device=source.device)[:, :target_width]
+    else:
+        projection = torch.zeros((source.shape[1], target_width), device=source.device)
+        projection[:, :source.shape[1]] = torch.eye(source.shape[1], device=source.device)
+    copied: dict[str, dict[str, int]] = {}
+    with torch.no_grad():
+        for aa in encoder.vocab:
+            if aa not in esm_token_ids:
+                raise ValueError(f"ESM tokenizer does not expose canonical residue {aa}")
+            source_id = int(esm_token_ids[aa])
+            target_id = encoder.token_to_idx[aa]
+            model.token_embedding.weight[target_id].copy_(source[source_id] @ projection.to(source.device))
+            copied[aa] = {"source_token_id": source_id, "student_token_id": target_id}
+    return {"source_revision": source_revision, "mapping": copied, "projection": "deterministic_prefix_truncate_or_zero_pad"}
 
 
 @dataclass(frozen=True)
@@ -296,6 +373,8 @@ class ReverseGenerationConfig:
     temperature: float
     seed: int
     confidence_reveal_fraction: float = 0.0
+    conditions: ConditionVector | None = None
+    cfg_scale: float = 1.0
 
 
 class TauLeapingSampler:
@@ -346,7 +425,7 @@ class TauLeapingSampler:
 
     def _terminate(self, canvases: torch.Tensor, batch_idx: int, pos: int) -> None:
         canvases[batch_idx, pos] = self.encoder.eos_idx
-        if pos + 1 < self.encoder.max_length:
+        if pos + 1 < self.encoder.canvas_length:
             canvases[batch_idx, pos + 1 :] = self.encoder.pad_idx
 
     def _apply_stochastic_corrector(self, canvases: torch.Tensor, torch_rng: torch.Generator) -> None:
@@ -390,7 +469,7 @@ class TauLeapingSampler:
 
         torch_rng = torch.Generator(device=self.device).manual_seed(gen_config.seed)
         canvases = torch.full(
-            (n, self.encoder.max_length),
+            (n, self.encoder.canvas_length),
             fill_value=self.encoder.mask_idx,
             dtype=torch.long,
             device=self.device,
@@ -408,7 +487,7 @@ class TauLeapingSampler:
 
                 t_value = min((step + 1) / gen_config.steps, 1.0 - 1e-6)
                 t = torch.full((n,), float(t_value), device=self.device)
-                logits = self.model(canvases, t)
+                logits = self.model.guided_logits(canvases, t, gen_config.conditions, gen_config.cfg_scale)
 
                 for batch_idx in range(n):
                     mask_positions = torch.nonzero(masked[batch_idx], as_tuple=False).flatten()
@@ -444,7 +523,7 @@ class TauLeapingSampler:
                             canvases[batch_idx, pos] = self.encoder.pad_idx
                             continue
                         if pos == stop_at:
-                            if stop_at < self.encoder.max_length:
+                            if stop_at < self.encoder.canvas_length:
                                 self._terminate(canvases, batch_idx, pos)
                             break
 
@@ -456,7 +535,7 @@ class TauLeapingSampler:
 
             unresolved = canvases.eq(self.encoder.mask_idx)
             if torch.any(unresolved):
-                logits = self.model(canvases, torch.ones((n,), device=self.device))
+                logits = self.model.guided_logits(canvases, torch.ones((n,), device=self.device), gen_config.conditions, gen_config.cfg_scale)
                 for batch_idx in range(n):
                     stop_at = int(target_len[batch_idx].item())
                     positions = torch.nonzero(unresolved[batch_idx], as_tuple=False).flatten().tolist()
@@ -467,7 +546,7 @@ class TauLeapingSampler:
                             canvases[batch_idx, pos] = self.encoder.pad_idx
                             continue
                         if pos == stop_at:
-                            if stop_at < self.encoder.max_length:
+                            if stop_at < self.encoder.canvas_length:
                                 self._terminate(canvases, batch_idx, pos)
                             break
 

@@ -1,5 +1,18 @@
 # AMP Challenge 2027
 
+## Reproduce generation
+
+```bash
+uv sync
+uv run generate --config configs/generate.json --checkpoint checkpoint --output-dir generate_broad_spectrum
+```
+
+Generation is deterministic for fixed checkpoint artifacts, environment, seed, and device. It does not train or download a model. A compatible version-2 checkpoint, the feature/discriminator artifacts, disclosed training FASTA, reference FASTA, vendored scorer weights, and the organizer identity-validator adapter must be supplied locally. The checked-in `checkpoint/weights.csv` alone is not a CTMC checkpoint. Until the organizer validator is configured, generation fails closed because the official identity calculation cannot be inferred from edit distance.
+
+Outputs are `library.fasta`, `top.fasta`, `scores.csv`, `score_components.json`, `run_manifest.json`, and `compliance_report.json` in the selected output directory. The top list is inserted into the library before remaining library selection.
+
+See [TRAINING.md](TRAINING.md), [DATA_CARD.md](DATA_CARD.md), [MODEL_CARD.md](MODEL_CARD.md), and [SUBMISSION.md](SUBMISSION.md) for data preparation, model behavior, and the current release requirements.
+
 > International competition for generative AI in antimicrobial peptide design.
 
 Antimicrobial resistance is one of the most pressing global health challenges. This competition invites participants to develop generative models that design novel antimicrobial peptides (AMPs) with activity against a panel of clinically relevant bacterial strains, including multi-drug resistant ESKAPE pathogens.
