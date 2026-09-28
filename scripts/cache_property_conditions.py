@@ -61,7 +61,7 @@ def main() -> None:
         )
     sequences = [
         canonical_sequence(s)
-        for s in FastaRepository(args.fasta.parent).read_sequences(args.fasta.name)
+        for s in FastaRepository(Path(".")).read_sequences(args.fasta)
     ]
     if len(set(sequences)) != len(sequences):
         raise ValueError("Training FASTA contains duplicate canonical sequences")
