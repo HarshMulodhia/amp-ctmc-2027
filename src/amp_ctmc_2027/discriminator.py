@@ -1,9 +1,11 @@
 """Discriminator for AMP classification and feature extraction."""
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import xgboost as xgb
@@ -22,8 +24,8 @@ class FeatureStats:
 class PeptideFeatureExtractor:
     """Deterministic handcrafted AMP feature extractor."""
 
-    hydrophobic_set = set("AVILMFWY")
-    aromatic_set = set("FWY")
+    hydrophobic_set: ClassVar[set[str]] = set("AVILMFWY")
+    aromatic_set: ClassVar[set[str]] = set("FWY")
 
     def __init__(self, alphabet: str = "ACDEFGHIKLMNPQRSTVWY") -> None:
         self.alphabet = alphabet
@@ -57,10 +59,22 @@ class PeptideFeatureExtractor:
 
             composition = counts / length
             non_zero = composition > 0
-            entropy = float(-np.sum(composition[non_zero] * np.log(composition[non_zero])))
-            net_charge = float(seq.count("K") + seq.count("R") + 0.1 * seq.count("H") - seq.count("D") - seq.count("E"))
-            hydrophobic_fraction = float(sum(seq.count(aa) for aa in self.hydrophobic_set) / length)
-            aromatic_fraction = float(sum(seq.count(aa) for aa in self.aromatic_set) / length)
+            entropy = float(
+                -np.sum(composition[non_zero] * np.log(composition[non_zero]))
+            )
+            net_charge = float(
+                seq.count("K")
+                + seq.count("R")
+                + 0.1 * seq.count("H")
+                - seq.count("D")
+                - seq.count("E")
+            )
+            hydrophobic_fraction = float(
+                sum(seq.count(aa) for aa in self.hydrophobic_set) / length
+            )
+            aromatic_fraction = float(
+                sum(seq.count(aa) for aa in self.aromatic_set) / length
+            )
 
             feats[row, 0] = float(len(seq))
             feats[row, 1] = net_charge
@@ -74,30 +88,51 @@ class PeptideFeatureExtractor:
     def fit_stats(self, sequences: list[str]) -> FeatureStats:
         """Fit robust feature statistics from training peptides."""
         feats = self.extract_batch(sequences)
-        means = {name: float(feats[:, idx].mean()) for idx, name in enumerate(self.feature_names)}
-        stds = {name: float(feats[:, idx].std() + 1e-6) for idx, name in enumerate(self.feature_names)}
-        q05 = {name: float(np.quantile(feats[:, idx], 0.05)) for idx, name in enumerate(self.feature_names)}
-        q95 = {name: float(np.quantile(feats[:, idx], 0.95)) for idx, name in enumerate(self.feature_names)}
+        means = {
+            name: float(feats[:, idx].mean())
+            for idx, name in enumerate(self.feature_names)
+        }
+        stds = {
+            name: float(feats[:, idx].std() + 1e-6)
+            for idx, name in enumerate(self.feature_names)
+        }
+        q05 = {
+            name: float(np.quantile(feats[:, idx], 0.05))
+            for idx, name in enumerate(self.feature_names)
+        }
+        q95 = {
+            name: float(np.quantile(feats[:, idx], 0.95))
+            for idx, name in enumerate(self.feature_names)
+        }
         return FeatureStats(means=means, stds=stds, q05=q05, q95=q95)
 
 
 class AMPDiscriminator:
     """XGBoost binary classifier for AMP-vs-background prediction."""
 
-    def __init__(self, extractor: PeptideFeatureExtractor, seed: int = 42, rounds: int = 200) -> None:
+    def __init__(
+        self, extractor: PeptideFeatureExtractor, seed: int = 42, rounds: int = 200
+    ) -> None:
         self.extractor = extractor
         self.seed = seed
         self.rounds = rounds
         self.booster: xgb.Booster | None = None
 
-    def fit(self, positive_seqs: list[str], negative_seqs: list[str]) -> "AMPDiscriminator":
+    def fit(
+        self, positive_seqs: list[str], negative_seqs: list[str]
+    ) -> AMPDiscriminator:
         """Train discriminator from scratch."""
         sequences = positive_seqs + negative_seqs
         labels = np.concatenate(
-            [np.ones(len(positive_seqs), dtype=np.float32), np.zeros(len(negative_seqs), dtype=np.float32)]
+            [
+                np.ones(len(positive_seqs), dtype=np.float32),
+                np.zeros(len(negative_seqs), dtype=np.float32),
+            ]
         )
         features = self.extractor.extract_batch(sequences)
-        dtrain = xgb.DMatrix(features, label=labels, feature_names=self.extractor.feature_names)
+        dtrain = xgb.DMatrix(
+            features, label=labels, feature_names=self.extractor.feature_names
+        )
         params = {
             "objective": "binary:logistic",
             "eval_metric": "logloss",
@@ -105,7 +140,9 @@ class AMPDiscriminator:
             "tree_method": "hist",
             "nthread": -1,
         }
-        self.booster = xgb.train(params=params, dtrain=dtrain, num_boost_round=self.rounds)
+        self.booster = xgb.train(
+            params=params, dtrain=dtrain, num_boost_round=self.rounds
+        )
         return self
 
     def predict_proba(self, sequences: list[str]) -> np.ndarray:
@@ -127,7 +164,9 @@ class AMPDiscriminator:
         tmp.replace(path)
 
     @classmethod
-    def load(cls, path: Path, extractor: PeptideFeatureExtractor, seed: int = 42) -> "AMPDiscriminator":
+    def load(
+        cls, path: Path, extractor: PeptideFeatureExtractor, seed: int = 42
+    ) -> AMPDiscriminator:
         """Load a serialized discriminator model."""
         model = cls(extractor=extractor, seed=seed)
         booster = xgb.Booster()
@@ -150,7 +189,7 @@ class AMPDiscriminator:
         """Load from dictionary written by to_dict()."""
         payload = data["booster_json"]
         if isinstance(payload, list):
-            raise RuntimeError(
+            raise TypeError(
                 "discriminator.json was saved with get_dump() and cannot be loaded. "
                 "Re-save the ensemble with save_raw(raw_format='json')."
             )
@@ -181,7 +220,7 @@ class DiscriminatorEnsemble:
         self,
         positive_sequences: list[str],
         background_sequences: list[str],
-    ) -> "DiscriminatorEnsemble":
+    ) -> DiscriminatorEnsemble:
         """Train all ensemble members."""
         for member in self.members:
             member.fit(positive_sequences, background_sequences)
@@ -207,7 +246,9 @@ class DiscriminatorEnsemble:
         tmp.replace(path)
 
     @classmethod
-    def load(cls, path: Path, extractor: PeptideFeatureExtractor) -> "DiscriminatorEnsemble":
+    def load(
+        cls, path: Path, extractor: PeptideFeatureExtractor
+    ) -> DiscriminatorEnsemble:
         """Load all ensemble members from disk."""
         payload = json.loads(path.read_text(encoding="utf-8"))
         ensemble = cls(extractor=extractor, seeds=payload["seeds"])

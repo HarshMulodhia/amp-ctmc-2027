@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class VendoredScorerClient:
     """APEX-style subprocess scorer wrapper with isolated dependencies."""
 
-    def __init__(self, project_dir: Path, timeout_sec: int = 600, chunk_size: int = 256) -> None:
+    def __init__(
+        self, project_dir: Path, timeout_sec: int = 600, chunk_size: int = 256
+    ) -> None:
         self.project_dir = project_dir
         self.timeout_sec = timeout_sec
         self.chunk_size = chunk_size
@@ -37,17 +39,26 @@ class VendoredScorerClient:
             return self._cache[key]
 
         chunks: dict[str, list[np.ndarray]] = {}
-        expected = {"activity", "hemolysis", "activity_hemolysis", "esm2_pseudo_perplexity"}
+        expected = {
+            "activity",
+            "hemolysis",
+            "activity_hemolysis",
+            "esm2_pseudo_perplexity",
+        }
         for start in range(0, len(sequences), self.chunk_size):
             chunk = sequences[start : start + self.chunk_size]
             # A configured, weighted scorer is mandatory: failure must not alter rank silently.
             result = self._invoke({"sequences": chunk})
             if not expected.issubset(result):
-                raise ValueError(f"Scorer response missing fields: {sorted(expected - set(result))}")
+                raise ValueError(
+                    f"Scorer response missing fields: {sorted(expected - set(result))}"
+                )
             for name in expected:
                 values = np.asarray(result[name], dtype=np.float32)
                 if values.shape != (len(chunk),) or not np.isfinite(values).all():
-                    raise ValueError(f"Invalid scorer output {name!r}: expected {len(chunk)} finite values")
+                    raise ValueError(
+                        f"Invalid scorer output {name!r}: expected {len(chunk)} finite values"
+                    )
                 chunks.setdefault(name, []).append(values)
         output = {name: np.concatenate(parts) for name, parts in chunks.items()}
         self._cache[key] = output
@@ -87,7 +98,12 @@ class VendoredScorerClient:
                     env={**os.environ, "PYTHONPATH": pythonpath},
                 )
                 return json.loads(completed.stdout)
-            except Exception as exc:  # pragma: no cover - runtime dependent
+            except (
+                OSError,
+                subprocess.SubprocessError,
+                json.JSONDecodeError,
+                ValueError,
+            ) as exc:  # pragma: no cover
                 last_exc = exc
                 continue
         raise RuntimeError(f"Unable to run vendored scorer subprocess: {last_exc}")

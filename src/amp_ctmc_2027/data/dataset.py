@@ -28,7 +28,9 @@ class AMPCanvasEncoder:
     mask_token: str = "<MASK>"
     pad_token: str = "<PAD>"
 
-    def __init__(self, max_length: int = 50, vocab: str = "ACDEFGHIKLMNPQRSTVWY") -> None:
+    def __init__(
+        self, max_length: int = 50, vocab: str = "ACDEFGHIKLMNPQRSTVWY"
+    ) -> None:
         self.max_length = max_length
         self.vocab = vocab
         self.alphabet = set(vocab)
@@ -52,10 +54,15 @@ class AMPCanvasEncoder:
         ).__dict__
 
     @classmethod
-    def from_metadata(cls, metadata: dict) -> "AMPCanvasEncoder":
+    def from_metadata(cls, metadata: dict) -> AMPCanvasEncoder:
         """Create encoder from checkpoint metadata."""
-        if metadata.get("version", 1) < 2 or metadata.get("canvas_semantics") != "residues_plus_eos":
-            raise ValueError("Legacy tokenizer canvas is incompatible; retrain or migrate this checkpoint explicitly")
+        if (
+            metadata.get("version", 1) < 2
+            or metadata.get("canvas_semantics") != "residues_plus_eos"
+        ):
+            raise ValueError(
+                "Legacy tokenizer canvas is incompatible; retrain or migrate this checkpoint explicitly"
+            )
         return cls(max_length=int(metadata["max_length"]), vocab=str(metadata["vocab"]))
 
     @property
@@ -106,12 +113,16 @@ class AMPCanvasEncoder:
                 sequence.append(token)
         return "".join(sequence)
 
-    def mask_canvas(self, canvas: torch.Tensor, t: float, rng: np.random.Generator) -> torch.Tensor:
+    def mask_canvas(
+        self, canvas: torch.Tensor, t: float, rng: np.random.Generator
+    ) -> torch.Tensor:
         """Apply factorized masking corruption using kappa(t)=sin^2(pi t/2)."""
         corrupted = canvas.clone()
         kappa = math.sin(math.pi * float(t) / 2.0) ** 2
         non_pad = corrupted != self.pad_idx
-        reveal_draws = torch.from_numpy(rng.random(self.canvas_length)).to(dtype=torch.float32)
+        reveal_draws = torch.from_numpy(rng.random(self.canvas_length)).to(
+            dtype=torch.float32
+        )
         keep = reveal_draws < kappa
         to_mask = non_pad & ~keep
         if not torch.any(to_mask) and torch.any(non_pad):

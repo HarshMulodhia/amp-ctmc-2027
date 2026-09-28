@@ -5,12 +5,13 @@ Usage:
     python scripts/tune_score_weights.py
 
 This script loads a checkpoint, generates a candidate pool, computes per-component scores,
-and searches for optimal weight combinations that maximize the composite score while 
+and searches for optimal weight combinations that maximize the composite score while
 satisfying novelty and diversity constraints.
 
 After running, inspect the tuned_weights.json and manually integrate into config.json
 if satisfied with the results.
 """
+
 from __future__ import annotations
 
 import json
@@ -18,21 +19,29 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from amp_ctmc_2027.config import AMPConfig, set_global_determinism
-from amp_ctmc_2027.core import CTMCDenoiser, ReverseGenerationConfig, SinSquaredSchedule, TauLeapingSampler
+from amp_ctmc_2027.core import (
+    CTMCDenoiser,
+    ReverseGenerationConfig,
+    SinSquaredSchedule,
+    TauLeapingSampler,
+)
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder
 from amp_ctmc_2027.data.fasta_io import FastaRepository
-from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, FeatureStats, PeptideFeatureExtractor
-from amp_ctmc_2027.infra import log_device, resolve_device, ConstraintValidator
+from amp_ctmc_2027.discriminator import (
+    DiscriminatorEnsemble,
+    FeatureStats,
+    PeptideFeatureExtractor,
+)
+from amp_ctmc_2027.infra import ConstraintValidator, log_device, resolve_device
 from amp_ctmc_2027.objectives import (
     ConformityScorer,
     DiscriminatorScorer,
+    MaskedPseudoLikelihoodScorer,
     MultiObjectiveScorer,
     NoveltyScorer,
     QualityScorer,
-    RealismScorer,
     ScoringContext,
     grid_search_weights,
 )
@@ -52,7 +61,9 @@ def load_training_stats(path: Path) -> FeatureStats:
     )
 
 
-def length_prior(training_sequences: list[str], min_length: int, max_length: int) -> list[float]:
+def length_prior(
+    training_sequences: list[str], min_length: int, max_length: int
+) -> list[float]:
     """Build length prior from training set."""
     train_lengths = np.array([len(seq) for seq in training_sequences], dtype=np.int64)
     counts = np.bincount(train_lengths, minlength=max_length + 1)
@@ -64,7 +75,9 @@ def length_prior(training_sequences: list[str], min_length: int, max_length: int
 
 def run_tune_weights() -> None:
     """Execute weight tuning."""
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s"
+    )
 
     fasta_repo = FastaRepository(Path.cwd())
     checkpoint_dir = fasta_repo.resolve(Path("checkpoint"))
@@ -99,7 +112,9 @@ def run_tune_weights() -> None:
 
     feature_extractor = PeptideFeatureExtractor(alphabet=ckpt_config.vocab)
     feature_stats = load_training_stats(stats_path)
-    discriminator = DiscriminatorEnsemble.load(discriminator_path, extractor=feature_extractor)
+    discriminator = DiscriminatorEnsemble.load(
+        discriminator_path, extractor=feature_extractor
+    )
 
     training_sequences = fasta_repo.read_sequences(ckpt_config.training_fasta_path)
     forbidden = set(fasta_repo.read_sequences(ckpt_config.antibacterial_fasta_path))
@@ -136,7 +151,7 @@ def run_tune_weights() -> None:
                 ckpt_config.generation_shares,
             )
         ):
-            batch_n = max(1, int(round(ckpt_config.generation_batch_size * share)))
+            batch_n = max(1, round(ckpt_config.generation_batch_size * share))
             run_config = ReverseGenerationConfig(
                 steps=int(steps),
                 temperature=float(temp),
@@ -151,14 +166,16 @@ def run_tune_weights() -> None:
         if len(candidates) >= ckpt_config.candidate_pool_size:
             break
 
-    logger.info("Generated %d candidates. Computing component scores...", len(candidates))
+    logger.info(
+        "Generated %d candidates. Computing component scores...", len(candidates)
+    )
 
     components = [
         DiscriminatorScorer(),
         ConformityScorer(),
         NoveltyScorer(),
         QualityScorer(),
-        RealismScorer(),
+        MaskedPseudoLikelihoodScorer(),
     ]
     context = ScoringContext(
         training_sequences=training_sequences,
@@ -177,7 +194,9 @@ def run_tune_weights() -> None:
         norm = MultiObjectiveScorer._rank_normalize(raw)
         component_scores[component.name] = norm
 
-    def combine_geometric(scores_dict: dict[str, np.ndarray], weights: dict[str, float]) -> np.ndarray:
+    def combine_geometric(
+        scores_dict: dict[str, np.ndarray], weights: dict[str, float]
+    ) -> np.ndarray:
         eps = 1e-6
         log_sum = None
         for name, scores in scores_dict.items():

@@ -24,7 +24,9 @@ class AMPConfig(BaseModel):
     condition_dim: int = 9
     condition_dropout: float = 0.1
     cfg_scale: float = 1.0
-    ctmc_pretraining_mode: Literal["none", "embedding_init", "distill", "embedding_init_and_distill"] = "none"
+    ctmc_pretraining_mode: Literal[
+        "none", "embedding_init", "distill", "embedding_init_and_distill"
+    ] = "none"
     teacher_checkpoint_dir: Path | None = None
     teacher_model_name: str = "facebook/esm2_t30_150M_UR50D"
     teacher_revision: str | None = None
@@ -104,19 +106,27 @@ class AMPConfig(BaseModel):
     external_scorer_timeout_sec: int = 600
 
     @model_validator(mode="after")
-    def validate_fields(self) -> "AMPConfig":
+    def validate_fields(self) -> AMPConfig:
         if self.min_length < 1 or self.max_length < self.min_length:
             raise ValueError("Invalid min/max length")
         if self.condition_dim != 9:
-            raise ValueError("condition_dim must match the nine documented condition fields")
+            raise ValueError(
+                "condition_dim must match the nine documented condition fields"
+            )
         if not 0.0 <= self.condition_dropout <= 1.0:
             raise ValueError("condition_dropout must be in [0, 1]")
-        if self.cfg_scale < 0 or self.teacher_distill_weight < 0 or self.teacher_logit_kl_weight < 0:
+        if (
+            self.cfg_scale < 0
+            or self.teacher_distill_weight < 0
+            or self.teacher_logit_kl_weight < 0
+        ):
             raise ValueError("guidance and distillation weights must be nonnegative")
         if len(set(self.vocab)) != 20:
             raise ValueError("Vocab must contain exactly 20 unique amino acids")
         if len(self.generation_temperatures) != len(self.generation_step_counts):
-            raise ValueError("generation_temperatures and generation_step_counts must match")
+            raise ValueError(
+                "generation_temperatures and generation_step_counts must match"
+            )
         if len(self.generation_shares) != len(self.generation_temperatures):
             raise ValueError("generation_shares must match generation_temperatures")
         if not np.isclose(sum(self.generation_shares), 1.0, atol=1e-6):
@@ -125,8 +135,13 @@ class AMPConfig(BaseModel):
             raise ValueError("n_sequences must be positive")
         if self.top_k < 1 or self.top_k > self.n_sequences:
             raise ValueError("top_k must be in [1, n_sequences]")
-        if self.final_shortlist_size < self.top_k or self.medium_shortlist_size < self.final_shortlist_size:
-            raise ValueError("shortlists must satisfy top_k <= final_shortlist_size <= medium_shortlist_size")
+        if (
+            self.final_shortlist_size < self.top_k
+            or self.medium_shortlist_size < self.final_shortlist_size
+        ):
+            raise ValueError(
+                "shortlists must satisfy top_k <= final_shortlist_size <= medium_shortlist_size"
+            )
         if any(weight < 0 for weight in self.score_weights.values()):
             raise ValueError("score weights must be nonnegative")
         for value, name in [
@@ -147,7 +162,7 @@ class AMPConfig(BaseModel):
         path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
 
     @classmethod
-    def from_json_file(cls, path: Path) -> "AMPConfig":
+    def from_json_file(cls, path: Path) -> AMPConfig:
         """Load config from a JSON file."""
         data = json.loads(path.read_text(encoding="utf-8"))
         return cls(**data)

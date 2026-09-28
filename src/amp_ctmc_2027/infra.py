@@ -1,9 +1,11 @@
 """Infrastructure: validation, experiment tracking, and runtime utilities."""
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import torch
 
@@ -13,14 +15,16 @@ logger = logging.getLogger(__name__)
 
 try:
     import wandb
-except Exception:  # pragma: no cover - runtime dependency fallback
+except ImportError:  # pragma: no cover - runtime dependency fallback
     wandb = None
 
 
 class ConstraintValidator:
     """Hard assignment constraint validator for peptide sequences."""
 
-    def __init__(self, alphabet: str, min_len: int, max_len: int, forbidden: set[str]) -> None:
+    def __init__(
+        self, alphabet: str, min_len: int, max_len: int, forbidden: set[str]
+    ) -> None:
         self.alphabet = set(alphabet)
         self.min_len = min_len
         self.max_len = max_len
@@ -32,11 +36,11 @@ class ConstraintValidator:
             return False
         if any(char not in self.alphabet for char in sequence):
             return False
-        if sequence in self.forbidden:
-            return False
-        return True
+        return sequence not in self.forbidden
 
-    def filter_valid(self, sequences: Iterable[str], seen: set[str] | None = None) -> list[str]:
+    def filter_valid(
+        self, sequences: Iterable[str], seen: set[str] | None = None
+    ) -> list[str]:
         """Return valid ordered-unique sequences."""
         output: list[str] = []
         local_seen: set[str] = set() if seen is None else seen
@@ -49,10 +53,14 @@ class ConstraintValidator:
                 output.append(seq)
         return output
 
-    def assert_library(self, library: list[str], expected_size: int | None = None) -> None:
+    def assert_library(
+        self, library: list[str], expected_size: int | None = None
+    ) -> None:
         """Raise AssertionError if any hard constraint is violated."""
         if expected_size is not None and len(library) != expected_size:
-            raise AssertionError(f"Expected {expected_size} sequences, found {len(library)}")
+            raise AssertionError(
+                f"Expected {expected_size} sequences, found {len(library)}"
+            )
         if len(library) != len(set(library)):
             raise AssertionError("Library contains duplicates")
         invalid = [sequence for sequence in library if not self.is_valid(sequence)]
@@ -79,8 +87,10 @@ class WandbTracker:
                 job_type=job_type,
                 mode=mode,
             )
-        except Exception as exc:  # pragma: no cover - network/login dependent
-            logger.warning("Failed to initialize wandb (%s); continuing without tracking", exc)
+        except Exception as exc:  # noqa: BLE001 - tracker is an optional network integration
+            logger.warning(
+                "Failed to initialize wandb (%s); continuing without tracking", exc
+            )
             self._run = None
 
     @property

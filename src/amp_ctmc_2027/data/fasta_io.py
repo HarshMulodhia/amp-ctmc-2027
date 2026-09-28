@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -29,7 +29,9 @@ class FastaRepository:
             sequences.append(str(record.seq).upper().strip())
         return sequences
 
-    def write_fasta(self, path: Path, sequences: Iterable[str], id_prefix: str = "amp") -> None:
+    def write_fasta(
+        self, path: Path, sequences: Iterable[str], id_prefix: str = "amp"
+    ) -> None:
         """Write peptide sequences as deterministic FASTA records."""
         resolved = self.resolve(path)
         resolved.parent.mkdir(parents=True, exist_ok=True)

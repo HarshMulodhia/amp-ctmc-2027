@@ -9,7 +9,9 @@ from amp_ctmc_2027.pipeline.generation_pipeline import GenerationPipeline
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate broad-spectrum AMP challenge outputs")
+    parser = argparse.ArgumentParser(
+        description="Generate broad-spectrum AMP challenge outputs"
+    )
     parser.add_argument("--config", type=Path, default=Path("configs/generate.json"))
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--output-dir", type=Path)
