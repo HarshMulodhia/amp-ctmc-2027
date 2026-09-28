@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "n_epochs": 200,
+  "batch_size": 256,
+  "learning_rate": 0.0003,
+  "checkpoint_dir": "checkpoint",
+  "training_fasta_path": "data/training/training.fasta",
+  "background_fasta_path": "data/generic/background.fasta",
+  "debug_overfit_samples": null,
+  "wandb_enabled": false,
+  "wandb_mode": "disabled",
+  "ctmc_pretraining_mode": "none",
+  "condition_dim": 9,
+  "condition_dropout": 0.1,
+  "cfg_scale": 1.0
+}

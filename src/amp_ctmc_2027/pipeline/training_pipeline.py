@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import csv
+import json
 from dataclasses import asdict
 
 import numpy as np
@@ -13,8 +15,10 @@ from tqdm import tqdm
 
 from amp_ctmc_2027.config import AMPConfig, set_global_determinism
 from amp_ctmc_2027.core import CTMCDenoiser, SinSquaredSchedule
+from amp_ctmc_2027.core import initialize_amino_acid_embeddings
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder, AMPDataset
 from amp_ctmc_2027.data.fasta_io import FastaRepository
+from amp_ctmc_2027.data.manifests import sha256_file, write_manifest
 from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, PeptideFeatureExtractor
 from amp_ctmc_2027.infra import log_device, resolve_device, WandbTracker
 
@@ -48,13 +52,13 @@ class TrainingPipeline:
         return corrupted
 
     def _sample_t_curriculum(self, batch_size: int, epoch: int, total_epochs: int, device: torch.device) -> torch.Tensor:
-        """Sample time with curriculum bias toward easier (low-mask) t early on."""
+        """Sample t where 0 is fully masked and 1 is clean; early samples favor clean t."""
         warmup_frac = min(1.0, epoch / max(1, total_epochs // 4))
         base = torch.rand((batch_size,), device=device)
         if warmup_frac >= 1.0:
             return base
-        skewed = base.pow(2.0 + 3.0 * (1.0 - warmup_frac))
-        return skewed
+        power = 2.0 + 3.0 * (1.0 - warmup_frac)
+        return 1.0 - (1.0 - base).pow(power)
 
     def _loss_for_batch(
         self,
@@ -63,9 +67,14 @@ class TrainingPipeline:
         encoder: AMPCanvasEncoder,
         epoch: int = 0,
         total_epochs: int = 1,
+        validation: bool = False,
     ) -> tuple[torch.Tensor | None, dict[str, float]]:
         batch_size = clean.size(0)
-        t = self._sample_t_curriculum(batch_size, epoch, total_epochs, clean.device)
+        if validation:
+            # Fixed stratified evaluation distribution, independent of training epoch.
+            t = torch.linspace(0.0, 1.0, batch_size + 2, device=clean.device)[1:-1]
+        else:
+            t = self._sample_t_curriculum(batch_size, epoch, total_epochs, clean.device)
         x_t = self._corrupt_batch(clean, t, encoder)
         valid = clean.ne(encoder.pad_idx)
         supervised = x_t.eq(encoder.mask_idx) & valid
@@ -143,19 +152,36 @@ class TrainingPipeline:
             encoder.pad_idx,
         )
 
-        rng = np.random.default_rng(self.config.seed)
         if self.config.debug_overfit_samples is not None:
+            rng = np.random.default_rng(self.config.seed)
             n = min(self.config.debug_overfit_samples, len(training_sequences))
             train_sequences = training_sequences[:n]
             val_sequences = training_sequences[:n]
             logger.warning("OVERFIT DEBUG MODE: train and val use the same %d sequences", n)
         else:
-            indices = rng.permutation(len(training_sequences))
-            val_count = max(1, int(round(len(training_sequences) * self.config.val_fraction))) if len(training_sequences) > 1 else 0
-            val_indices = indices[:val_count]
-            train_indices = indices[val_count:] if val_count > 0 else indices
-            train_sequences = [training_sequences[i] for i in train_indices.tolist()]
-            val_sequences = [training_sequences[i] for i in val_indices.tolist()] if val_count > 0 else train_sequences
+            split_path = self.repo.resolve(self.config.cluster_split_manifest_path)
+            if not split_path.exists():
+                raise FileNotFoundError(f"Production CTMC training requires a cluster-level split manifest: {split_path}")
+            with split_path.open(newline="", encoding="utf-8") as stream:
+                split_rows = list(csv.DictReader(stream))
+            sequence_split: dict[str, tuple[str, str]] = {}
+            for row in split_rows:
+                seq = "".join(row["sequence"].split()).upper()
+                if seq in sequence_split and sequence_split[seq][1] != row["split"]:
+                    raise ValueError(f"Exact sequence crosses split assignments: {seq}")
+                sequence_split[seq] = (row["split_cluster_id"], row["split"])
+            cluster_split: dict[str, str] = {}
+            for cluster_id, split in sequence_split.values():
+                if cluster_id in cluster_split and cluster_split[cluster_id] != split:
+                    raise ValueError(f"Homology cluster crosses splits: {cluster_id}")
+                cluster_split[cluster_id] = split
+            missing = sorted(set(training_sequences) - set(sequence_split))
+            if missing:
+                raise ValueError(f"Training FASTA has {len(missing)} sequences absent from split manifest")
+            train_sequences = [s for s in training_sequences if sequence_split[s][1] == "train"]
+            val_sequences = [s for s in training_sequences if sequence_split[s][1] == "val"]
+            if not train_sequences or not val_sequences:
+                raise ValueError("Cluster split manifest requires nonempty train and val splits")
 
         device = resolve_device(self.config)
         log_device(device)
@@ -171,6 +197,34 @@ class TrainingPipeline:
             vocab_size=encoder.vocab_size,
             pad_idx=encoder.pad_idx,
         ).to(device)
+        transfer_metadata = {"mode": self.config.ctmc_pretraining_mode}
+        if "distill" in self.config.ctmc_pretraining_mode:
+            raise RuntimeError("Teacher distillation is selected but teacher-cache distillation is not connected to this trainer")
+        if self.config.ctmc_pretraining_mode == "embedding_init":
+            try:
+                from transformers import AutoTokenizer, EsmModel
+            except ImportError as exc:
+                raise RuntimeError("Install the training extra to initialize from ESM embeddings") from exc
+            source = self.config.teacher_model_name
+            tokenizer = AutoTokenizer.from_pretrained(source, revision=self.config.teacher_revision)
+            if self.config.teacher_checkpoint_dir is not None:
+                teacher_dir = self.repo.resolve(self.config.teacher_checkpoint_dir)
+                from amp_ctmc_2027.models.esm_multitask import ESMMultiTaskPredictor
+                metadata = json.loads((teacher_dir / "model_metadata.json").read_text(encoding="utf-8"))
+                teacher_model, _ = ESMMultiTaskPredictor.from_pretrained(
+                    metadata["model_name"], metadata.get("revision"), len(metadata["strain_ids"])
+                )
+                teacher_model.load_state_dict(torch.load(teacher_dir / "model.pt", map_location="cpu", weights_only=True))
+                teacher = teacher_model.backbone
+                source_revision = metadata.get("revision") or metadata["model_name"]
+            else:
+                teacher = EsmModel.from_pretrained(source, revision=self.config.teacher_revision)
+                source_revision = self.config.teacher_revision or source
+            residue_ids = {aa: int(tokenizer.convert_tokens_to_ids(aa)) for aa in self.config.vocab}
+            transfer_metadata.update(initialize_amino_acid_embeddings(
+                model, teacher.embeddings.word_embeddings.weight, residue_ids, encoder,
+                source_revision=source_revision,
+            ))
         optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=self.config.learning_rate,
@@ -204,8 +258,24 @@ class TrainingPipeline:
         best_state: dict | None = None
         patience = 0
         history: list[dict[str, float]] = []
+        start_epoch = 0
+        if self.config.resume_from is not None:
+            resume_path = self.repo.resolve(self.config.resume_from)
+            resume = torch.load(resume_path, map_location=device, weights_only=False)
+            if resume.get("checkpoint_version") != 2 or resume.get("canvas_semantics") != "residues_plus_eos":
+                raise ValueError("Resume checkpoint has incompatible canvas semantics/version")
+            model.load_state_dict(resume["model"])
+            optimizer.load_state_dict(resume["optimizer"])
+            if scheduler is not None and resume.get("scheduler") is not None:
+                scheduler.load_state_dict(resume["scheduler"])
+            start_epoch = int(resume["epoch"])
+            best_val_loss = float(resume["best_val_loss"])
+            best_state = resume["best_state"]
+            patience = int(resume["patience"])
+            history = list(resume["history"])
+            logger.info("Resuming optimizer/model state at epoch %d", start_epoch)
 
-        for epoch in range(self.config.n_epochs):
+        for epoch in range(start_epoch, self.config.n_epochs):
             model.train()
             train_loss_total = 0.0
             train_batches = 0
@@ -229,7 +299,7 @@ class TrainingPipeline:
             with torch.inference_mode():
                 for batch in val_loader:
                     batch = batch.to(device)
-                    loss, stats = self._loss_for_batch(model, batch, encoder)
+                    loss, stats = self._loss_for_batch(model, batch, encoder, validation=True)
                     self._accumulate(val_stats, stats)
                     if loss is not None:
                         val_loss_total += float(loss.item())
@@ -277,6 +347,19 @@ class TrainingPipeline:
             if scheduler is not None:
                 scheduler.step()
 
+            checkpoint_dir = self.repo.resolve(self.config.checkpoint_dir)
+            checkpoint_dir.mkdir(parents=True, exist_ok=True)
+            progress_path = checkpoint_dir / "training_state.pt"
+            tmp_progress = progress_path.with_suffix(".pt.tmp")
+            torch.save({
+                "checkpoint_version": 2, "canvas_semantics": "residues_plus_eos",
+                "epoch": epoch + 1, "model": model.state_dict(), "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler.state_dict() if scheduler is not None else None,
+                "best_val_loss": best_val_loss, "best_state": best_state,
+                "patience": patience, "history": history,
+            }, tmp_progress)
+            tmp_progress.replace(progress_path)
+
             if val_loss < best_val_loss - self.config.early_stopping_threshold:
                 best_val_loss = val_loss
                 best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
@@ -292,12 +375,12 @@ class TrainingPipeline:
         model.load_state_dict(best_state)
 
         feature_extractor = PeptideFeatureExtractor(alphabet=self.config.vocab)
-        feature_stats = feature_extractor.fit_stats(training_sequences)
+        feature_stats = feature_extractor.fit_stats(train_sequences)
         discriminator = DiscriminatorEnsemble(
             extractor=feature_extractor,
             seeds=[self.config.seed + i for i in range(self.config.discriminator_ensemble_size)],
         )
-        discriminator.fit(training_sequences, background_sequences)
+        discriminator.fit(train_sequences, background_sequences)
 
         checkpoint_dir = self.repo.resolve(self.config.checkpoint_dir)
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -308,11 +391,25 @@ class TrainingPipeline:
         self.repo.write_json_atomic(
             checkpoint_dir / "training_stats.json",
             {
+                "checkpoint_version": 2,
+                "canvas_semantics": "residues_plus_eos",
                 "best_val_loss": best_val_loss,
                 "history": history,
                 "feature_stats": asdict(feature_stats),
             },
         )
+        self.repo.write_json_atomic(checkpoint_dir / "pretrained_transfer.json", transfer_metadata)
+        write_manifest(checkpoint_dir / "dataset_manifest.json", {
+            "training_fasta": str(self.repo.resolve(self.config.training_fasta_path)),
+            "training_fasta_sha256": sha256_file(self.repo.resolve(self.config.training_fasta_path)),
+            "background_fasta": str(self.repo.resolve(self.config.background_fasta_path)),
+            "background_fasta_sha256": sha256_file(self.repo.resolve(self.config.background_fasta_path)),
+            "cluster_split_manifest": str(self.repo.resolve(self.config.cluster_split_manifest_path)) if self.config.cluster_split_manifest_path.exists() else None,
+            "cluster_split_sha256": sha256_file(self.repo.resolve(self.config.cluster_split_manifest_path)) if self.config.cluster_split_manifest_path.exists() else None,
+            "train_count": len(train_sequences), "validation_count": len(val_sequences),
+            "config": self.config.model_dump(mode="json"), "checkpoint_version": 2,
+            "canvas_semantics": "residues_plus_eos",
+        })
         discriminator.save(checkpoint_dir / "discriminator.json")
         tracker.log({"val/best_loss": best_val_loss})
         tracker.finish()

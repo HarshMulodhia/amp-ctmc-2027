@@ -16,7 +16,20 @@ class AMPConfig(BaseModel):
 
     vocab: str = "ACDEFGHIKLMNPQRSTVWY"
     max_length: int = 50
+    checkpoint_version: int = 2
+    canvas_semantics: Literal["residues_plus_eos"] = "residues_plus_eos"
     min_length: int = 8
+
+    # Optional conditional CTMC. Conditions are ordered by CONDITION_NAMES in core.py.
+    condition_dim: int = 9
+    condition_dropout: float = 0.1
+    cfg_scale: float = 1.0
+    ctmc_pretraining_mode: Literal["none", "embedding_init", "distill", "embedding_init_and_distill"] = "none"
+    teacher_checkpoint_dir: Path | None = None
+    teacher_model_name: str = "facebook/esm2_t30_150M_UR50D"
+    teacher_revision: str | None = None
+    teacher_distill_weight: float = 0.0
+    teacher_logit_kl_weight: float = 0.0
 
     d_model: int = 512
     n_heads: int = 16
@@ -46,6 +59,8 @@ class AMPConfig(BaseModel):
     dfm_stochasticity: float = 0.0
     candidate_pool_size: int = 120000
     max_generation_attempts: int = 300
+    medium_shortlist_size: int = 10000
+    final_shortlist_size: int = 3000
 
     n_sequences: int = 50000
     top_k: int = 100
@@ -53,7 +68,7 @@ class AMPConfig(BaseModel):
     score_weights: dict[str, float] = Field(
         default_factory=lambda: {
             "discriminator": 0.18,
-            "realism": 0.16,
+            "masked_pseudo_likelihood": 0.16,
             "conformity": 0.14,
             "novelty": 0.12,
             "quality": 0.12,
@@ -66,20 +81,24 @@ class AMPConfig(BaseModel):
 
     seed: int = 42
     device: Literal["auto", "cuda", "mps", "cpu"] = "auto"
-    wandb_enabled: bool = True
+    wandb_enabled: bool = False
     wandb_project: str = "AMPGen"
     wandb_entity: str | None = None
-    wandb_mode: Literal["online", "offline", "disabled"] = "online"
+    wandb_mode: Literal["online", "offline", "disabled"] = "disabled"
 
     training_fasta_path: Path = Path("data/training/training.fasta")
+    cluster_split_manifest_path: Path = Path("data/training/split_manifest.csv")
     antibacterial_fasta_path: Path = Path("data/antibacterial.fasta")
     background_fasta_path: Path = Path("data/generic/background.fasta")
     checkpoint_dir: Path = Path("checkpoint")
+    resume_from: Path | None = None
     generate_dir: Path = Path("generate_broad_spectrum")
 
     novelty_similarity_ceiling: float = 0.60
     diversity_similarity_ceiling: float = 0.85
     top_identity_ceiling: float = 0.80
+    official_identity_function: str | None = None
+    require_official_compliance: bool = True
 
     external_scorer_project_dir: Path = Path("scorer")
     external_scorer_timeout_sec: int = 600
@@ -88,8 +107,12 @@ class AMPConfig(BaseModel):
     def validate_fields(self) -> "AMPConfig":
         if self.min_length < 1 or self.max_length < self.min_length:
             raise ValueError("Invalid min/max length")
-        if self.max_length != 50:
-            raise ValueError("The assignment requires a fixed canvas length of 50")
+        if self.condition_dim != 9:
+            raise ValueError("condition_dim must match the nine documented condition fields")
+        if not 0.0 <= self.condition_dropout <= 1.0:
+            raise ValueError("condition_dropout must be in [0, 1]")
+        if self.cfg_scale < 0 or self.teacher_distill_weight < 0 or self.teacher_logit_kl_weight < 0:
+            raise ValueError("guidance and distillation weights must be nonnegative")
         if len(set(self.vocab)) != 20:
             raise ValueError("Vocab must contain exactly 20 unique amino acids")
         if len(self.generation_temperatures) != len(self.generation_step_counts):
@@ -102,6 +125,8 @@ class AMPConfig(BaseModel):
             raise ValueError("n_sequences must be positive")
         if self.top_k < 1 or self.top_k > self.n_sequences:
             raise ValueError("top_k must be in [1, n_sequences]")
+        if self.final_shortlist_size < self.top_k or self.medium_shortlist_size < self.final_shortlist_size:
+            raise ValueError("shortlists must satisfy top_k <= final_shortlist_size <= medium_shortlist_size")
         if any(weight < 0 for weight in self.score_weights.values()):
             raise ValueError("score weights must be nonnegative")
         for value, name in [

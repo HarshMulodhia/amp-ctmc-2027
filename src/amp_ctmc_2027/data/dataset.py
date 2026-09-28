@@ -17,6 +17,8 @@ class TokenMetadata:
     eos_token: str
     mask_token: str
     pad_token: str
+    version: int = 2
+    canvas_semantics: str = "residues_plus_eos"
 
 
 class AMPCanvasEncoder:
@@ -52,12 +54,19 @@ class AMPCanvasEncoder:
     @classmethod
     def from_metadata(cls, metadata: dict) -> "AMPCanvasEncoder":
         """Create encoder from checkpoint metadata."""
+        if metadata.get("version", 1) < 2 or metadata.get("canvas_semantics") != "residues_plus_eos":
+            raise ValueError("Legacy tokenizer canvas is incompatible; retrain or migrate this checkpoint explicitly")
         return cls(max_length=int(metadata["max_length"]), vocab=str(metadata["vocab"]))
 
     @property
     def vocab_size(self) -> int:
         """Return tokenizer vocabulary size."""
         return len(self.tokens)
+
+    @property
+    def canvas_length(self) -> int:
+        """Maximum residues plus one always-reserved EOS position."""
+        return self.max_length + 1
 
     def encode(self, sequence: str) -> torch.Tensor:
         """Encode a peptide sequence into a fixed-length tensor."""
@@ -68,15 +77,14 @@ class AMPCanvasEncoder:
             raise ValueError("Sequence contains invalid amino acid")
 
         canvas = [self.token_to_idx[aa] for aa in sequence]
-        if len(sequence) < self.max_length:
-            canvas.append(self.eos_idx)
-            canvas.extend([self.pad_idx] * (self.max_length - len(sequence) - 1))
+        canvas.append(self.eos_idx)
+        canvas.extend([self.pad_idx] * (self.max_length - len(sequence)))
         return torch.tensor(canvas, dtype=torch.long)
 
     def decode(self, canvas: torch.Tensor) -> str:
         """Decode a token canvas into a peptide sequence."""
         values = canvas.detach().cpu().tolist()
-        if len(values) != self.max_length:
+        if len(values) != self.canvas_length:
             raise ValueError("Canvas length mismatch")
 
         sequence: list[str] = []
@@ -86,8 +94,6 @@ class AMPCanvasEncoder:
             if token is None:
                 raise ValueError("Unknown token index")
             if token == self.pad_token:
-                if not eos_seen and len(sequence) != self.max_length:
-                    continue
                 if eos_seen:
                     continue
             elif token == self.eos_token:
@@ -105,7 +111,7 @@ class AMPCanvasEncoder:
         corrupted = canvas.clone()
         kappa = math.sin(math.pi * float(t) / 2.0) ** 2
         non_pad = corrupted != self.pad_idx
-        reveal_draws = torch.from_numpy(rng.random(self.max_length)).to(dtype=torch.float32)
+        reveal_draws = torch.from_numpy(rng.random(self.canvas_length)).to(dtype=torch.float32)
         keep = reveal_draws < kappa
         to_mask = non_pad & ~keep
         if not torch.any(to_mask) and torch.any(non_pad):
