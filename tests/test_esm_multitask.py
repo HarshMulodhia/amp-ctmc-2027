@@ -40,3 +40,22 @@ def test_output_shapes_and_missing_labels_have_zero_loss_gradient():
     assert losses["total"].item() == 0
     assert model.amp_head.weight.grad is not None
     assert torch.count_nonzero(model.amp_head.weight.grad) == 0
+
+
+def test_vectorized_panel_matches_legacy_strain_forwards():
+    torch.manual_seed(11)
+    model = ESMMultiTaskPredictor(TinyBackbone(), hidden_size=12, strain_count=3).eval()
+    ids = torch.tensor([[1, 4, 5, 2, 0], [1, 6, 7, 2, 0]])
+    mask = ids.ne(0)
+    strains = torch.tensor([0, 2, 3])
+    panel = model.forward_panel(ids, mask, strains)
+    legacy = [model(ids, mask, strains[i].expand(ids.shape[0])) for i in range(3)]
+    torch.testing.assert_close(
+        panel.mic_mean, torch.stack([item.mic_mean for item in legacy], dim=1)
+    )
+    torch.testing.assert_close(
+        panel.mic_log_std, torch.stack([item.mic_log_std for item in legacy], dim=1)
+    )
+    torch.testing.assert_close(panel.amp_logits, legacy[0].amp_logits)
+    torch.testing.assert_close(panel.hemolysis_logits, legacy[0].hemolysis_logits)
+    torch.testing.assert_close(panel.hc50_mean, legacy[0].hc50_mean)

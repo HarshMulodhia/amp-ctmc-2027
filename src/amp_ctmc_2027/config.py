@@ -23,7 +23,12 @@ class AMPConfig(BaseModel):
     # Optional conditional CTMC. Conditions are ordered by CONDITION_NAMES in core.py.
     condition_dim: int = 9
     condition_dropout: float = 0.1
+    mixed_precision: bool = True
     cfg_scale: float = 1.0
+    training_mode: Literal["unconditional", "property_conditioned"] = "unconditional"
+    condition_table_path: Path | None = None
+    condition_manifest_path: Path | None = None
+    property_metadata_path: Path = Path("artifacts/property/model_metadata.json")
     ctmc_pretraining_mode: Literal[
         "none", "embedding_init", "distill", "embedding_init_and_distill"
     ] = "none"
@@ -92,7 +97,7 @@ class AMPConfig(BaseModel):
     cluster_split_manifest_path: Path = Path("data/training/split_manifest.csv")
     antibacterial_fasta_path: Path = Path("data/antibacterial.fasta")
     background_fasta_path: Path = Path("data/generic/background.fasta")
-    checkpoint_dir: Path = Path("checkpoint")
+    checkpoint_dir: Path = Path("artifacts/ctmc")
     resume_from: Path | None = None
     generate_dir: Path = Path("generate_broad_spectrum")
 
@@ -121,6 +126,14 @@ class AMPConfig(BaseModel):
             or self.teacher_logit_kl_weight < 0
         ):
             raise ValueError("guidance and distillation weights must be nonnegative")
+        if (
+            "distill" in self.ctmc_pretraining_mode
+            or self.teacher_distill_weight > 0
+            or self.teacher_logit_kl_weight > 0
+        ):
+            raise ValueError(
+                "Teacher distillation is not implemented in the CTMC trainer; use an embedding initialization mode or none"
+            )
         if len(set(self.vocab)) != 20:
             raise ValueError("Vocab must contain exactly 20 unique amino acids")
         if len(self.generation_temperatures) != len(self.generation_step_counts):

@@ -1,1 +1,0 @@
-"""Vendored scorer package."""

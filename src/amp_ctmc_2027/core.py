@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import math
+import pickle
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -146,15 +147,15 @@ class RoPEAttention(nn.Module):
         self.dropout = dropout
 
     def forward(self, x: torch.Tensor, key_padding_mask: torch.Tensor) -> torch.Tensor:
-        b, l, d = x.shape
+        batch_size, sequence_length, width = x.shape
         qkv = (
             self.qkv(x)
-            .reshape(b, l, 3, self.n_heads, self.head_dim)
+            .reshape(batch_size, sequence_length, 3, self.n_heads, self.head_dim)
             .permute(2, 0, 3, 1, 4)
         )
         q, k, v = qkv[0], qkv[1], qkv[2]  # [B, n_heads, L, head_dim]
 
-        cos, sin = build_rope_cache(l, self.head_dim, x.device)
+        cos, sin = build_rope_cache(sequence_length, self.head_dim, x.device)
         q = apply_rope(q, cos, sin)
         k = apply_rope(k, cos, sin)
 
@@ -166,7 +167,7 @@ class RoPEAttention(nn.Module):
             attn_mask=attn_mask,
             dropout_p=self.dropout if self.training else 0.0,
         )
-        out = out.transpose(1, 2).reshape(b, l, d)
+        out = out.transpose(1, 2).reshape(batch_size, sequence_length, width)
         return self.out_proj(out)
 
 
@@ -325,9 +326,15 @@ class CTMCDenoiser(nn.Module):
                 raise ValueError("condition batch size must match token batch size")
             values = conditions.values.to(device=x_t.device, dtype=hidden.dtype)
             observed = conditions.observed.to(device=x_t.device, dtype=hidden.dtype)
-            t_emb = t_emb + self.condition_embedding(
+            condition_emb = self.condition_embedding(
                 torch.cat([values * observed, observed], dim=-1)
             )
+            # Fully dropped examples must be identical to the unconditional branch,
+            # including after the conditioning MLP's biases have learned nonzero values.
+            condition_emb = condition_emb * observed.any(dim=-1, keepdim=True).to(
+                condition_emb.dtype
+            )
+            t_emb = t_emb + condition_emb
         return self.encoder(hidden, t_emb, pad_mask)
 
     def forward(
@@ -369,15 +376,42 @@ class CTMCDenoiser(nn.Module):
         unconditional = self(x_t, t, None)
         return unconditional + float(cfg_scale) * (conditional - unconditional)
 
-    def save(self, path: Path) -> None:
+    def save(
+        self,
+        path: Path,
+        encoder: AMPCanvasEncoder | None = None,
+        contract: dict | None = None,
+    ) -> None:
         """Save model state dict atomically."""
+        encoder = encoder or AMPCanvasEncoder(
+            max_length=self.config.max_length, vocab=self.config.vocab
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
         torch.save(
             {
                 "checkpoint_version": 2,
                 "canvas_semantics": "residues_plus_eos",
+                "vocabulary": encoder.vocab,
+                "token_ids": encoder.token_to_idx,
+                "architecture": {
+                    "d_model": self.config.d_model,
+                    "n_heads": self.config.n_heads,
+                    "n_layers": self.config.n_layers,
+                    "d_ff": self.config.d_ff,
+                    "max_length": self.config.max_length,
+                    "condition_dim": self.config.condition_dim,
+                },
                 "state_dict": self.state_dict(),
+                "conditioning_contract": contract
+                or {
+                    "training_mode": self.config.training_mode,
+                    "condition_names": list(CONDITION_NAMES),
+                    "condition_normalization": {
+                        "mean": [0.0] * len(CONDITION_NAMES),
+                        "std": [1.0] * len(CONDITION_NAMES),
+                    },
+                },
             },
             tmp,
         )
@@ -394,7 +428,12 @@ class CTMCDenoiser(nn.Module):
     ) -> CTMCDenoiser:
         """Load a model from checkpoint."""
         model = cls(config=config, vocab_size=vocab_size, pad_idx=pad_idx)
-        state = torch.load(path, map_location=device, weights_only=False)
+        try:
+            state = torch.load(path, map_location=device, weights_only=True)
+        except (EOFError, OSError, pickle.UnpicklingError, RuntimeError) as exc:
+            raise ValueError(
+                f"Unable to deserialize CTMC checkpoint {path}: {exc}"
+            ) from exc
         if (
             not isinstance(state, dict)
             or state.get("checkpoint_version") != 2
@@ -403,8 +442,33 @@ class CTMCDenoiser(nn.Module):
             raise ValueError(
                 "Unsupported legacy CTMC checkpoint; canvas semantics changed and explicit migration is required"
             )
-        model.load_state_dict(state["state_dict"])
+        expected_encoder = AMPCanvasEncoder(
+            max_length=config.max_length, vocab=config.vocab
+        )
+        if (
+            state.get("vocabulary") != expected_encoder.vocab
+            or state.get("token_ids") != expected_encoder.token_to_idx
+        ):
+            raise ValueError("CTMC checkpoint vocabulary or token IDs do not match")
+        expected_architecture = {
+            "d_model": config.d_model,
+            "n_heads": config.n_heads,
+            "n_layers": config.n_layers,
+            "d_ff": config.d_ff,
+            "max_length": config.max_length,
+            "condition_dim": config.condition_dim,
+        }
+        if state.get("architecture") != expected_architecture:
+            raise ValueError("CTMC checkpoint architecture does not match manifest")
+        weights = state.get("state_dict")
+        if not isinstance(weights, dict):
+            raise ValueError("CTMC checkpoint has no state_dict")
+        for name, tensor in weights.items():
+            if not isinstance(tensor, torch.Tensor) or not torch.isfinite(tensor).all():
+                raise ValueError(f"CTMC checkpoint parameter {name!r} is invalid")
+        model.load_state_dict(weights, strict=True)
         model.to(device)
+        model.eval()
         return model
 
 

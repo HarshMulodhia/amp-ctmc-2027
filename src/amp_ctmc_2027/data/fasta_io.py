@@ -37,7 +37,11 @@ class FastaRepository:
         resolved.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = resolved.with_suffix(resolved.suffix + ".tmp")
         records = [
-            SeqRecord(Seq(sequence), id=f"{id_prefix}_{idx:04d}", description="")
+            SeqRecord(
+                Seq(sequence),
+                id=f"seq{idx}" if id_prefix == "seq" else f"{id_prefix}_{idx:06d}",
+                description="",
+            )
             for idx, sequence in enumerate(sequences, start=1)
         ]
         with open(tmp_path, "w", encoding="utf-8", newline="\n") as handle:

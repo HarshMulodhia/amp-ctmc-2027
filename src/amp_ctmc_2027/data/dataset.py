@@ -145,3 +145,70 @@ class AMPDataset(Dataset[torch.Tensor]):
 
     def __getitem__(self, idx: int) -> torch.Tensor:
         return self.items[idx]
+
+
+class ConditionedAMPDataset(Dataset[dict]):
+    """Encoded sequences joined to validated canonical condition rows."""
+
+    def __init__(
+        self,
+        sequences: list[str],
+        encoder: AMPCanvasEncoder,
+        rows: list[dict],
+        normalization: dict | None = None,
+    ):
+        from amp_ctmc_2027.core import CONDITION_NAMES
+
+        by_sequence = {row["sequence"]: row for row in rows}
+        missing = set(sequences) - set(by_sequence)
+        if missing:
+            raise ValueError(
+                f"Condition table lacks {len(missing)} requested sequences"
+            )
+        self.items = []
+        for sequence in sequences:
+            row = by_sequence[sequence]
+            if row.get("condition_names") != list(CONDITION_NAMES):
+                raise ValueError("Condition row ordering differs from CONDITION_NAMES")
+            values = torch.tensor(
+                [row["values"][n] for n in CONDITION_NAMES], dtype=torch.float32
+            )
+            observed = torch.tensor(
+                [row["observed"][n] for n in CONDITION_NAMES], dtype=torch.bool
+            )
+            if normalization is not None:
+                from amp_ctmc_2027.data.conditions import normalize_condition_values
+
+                values = normalize_condition_values(
+                    values.unsqueeze(0), observed.unsqueeze(0), normalization
+                ).squeeze(0)
+            self.items.append(
+                {
+                    "tokens": encoder.encode(sequence),
+                    "condition_values": values,
+                    "condition_observed": observed,
+                    "condition_provenance": [
+                        row["provenance"][n] for n in CONDITION_NAMES
+                    ],
+                    "sequence": sequence,
+                }
+            )
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __getitem__(self, idx: int) -> dict:
+        return self.items[idx]
+
+
+def collate_conditioned(batch: list[dict]) -> dict:
+    """Stack tensors and retain identifiers/provenance as per-example lists."""
+    return {
+        "tokens": torch.stack([item["tokens"] for item in batch]),
+        "condition_values": torch.stack([item["condition_values"] for item in batch]),
+        "condition_observed": torch.stack(
+            [item["condition_observed"] for item in batch]
+        ),
+        "condition_provenance": [item["condition_provenance"] for item in batch],
+        "sequence_ids": [item["sequence"] for item in batch],
+    }

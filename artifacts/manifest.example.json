@@ -1,0 +1,112 @@
+{
+  "artifact_schema_version": 1,
+  "submission_profile": "production",
+  "default_seed": 42,
+  "ranking_strains": [],
+  "strain_groups": {"gram_positive": [], "gram_negative": [], "mdr": []},
+  "scoring_weights": {
+    "mean_log2_mic": 0.25,
+    "worst_log2_mic": 0.35,
+    "amp_probability": 0.15,
+    "hemolysis_probability": 0.1,
+    "log2_hc50": 0.15
+  },
+  "official_identity_source": {
+    "repository_template_commit": "987afe5c9f73c82d39b0def7acdc56dec31a0132",
+    "path": "scripts/verify_submission.py:_veritfy_max_simularity",
+    "threshold": 0.8,
+    "reject_semantics": "strictly greater than"
+  },
+  "outputs": {
+    "library": "generate/library.fasta",
+    "top": "generate/top.fasta"
+  },
+  "vocabulary": {
+    "residues": "ACDEFGHIKLMNPQRSTVWY",
+    "max_length": 50,
+    "token_ids": {
+      "A": 0, "C": 1, "D": 2, "E": 3, "F": 4,
+      "G": 5, "H": 6, "I": 7, "K": 8, "L": 9,
+      "M": 10, "N": 11, "P": 12, "Q": 13, "R": 14,
+      "S": 15, "T": 16, "V": 17, "W": 18, "Y": 19,
+      "<EOS>": 20, "<MASK>": 21, "<PAD>": 22
+    }
+  },
+  "ctmc": {
+    "checkpoint_format_version": 2,
+    "config": {
+      "vocab": "ACDEFGHIKLMNPQRSTVWY",
+      "max_length": 50,
+      "d_model": 512,
+      "n_heads": 16,
+      "n_layers": 10,
+      "d_ff": 2048,
+      "condition_dim": 9
+    }
+  },
+  "property_model": {
+    "checkpoint_format_version": 1,
+    "backbone_dir": "artifacts/property/backbone",
+    "tokenizer_dir": "artifacts/property/tokenizer",
+    "hidden_size": 640,
+    "strain_dim": 64,
+    "strain_ids": {},
+    "unknown_strain_id": 0,
+    "inference_max_length": 64,
+    "inference_batch_size": 128,
+    "residue_token_ids": {}
+  },
+  "scorers": [
+    {"name": "esm_multitask_property", "artifact": "property_checkpoint"}
+  ],
+  "artifacts": {
+    "ctmc_checkpoint": {
+      "path": "artifacts/ctmc/model.pt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "property_checkpoint": {
+      "path": "artifacts/property/model.pt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "property_metadata": {
+      "path": "artifacts/property/model_metadata.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "property_files": [
+      {"path": "artifacts/property/backbone/config.json", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+      {"path": "artifacts/property/backbone/model.safetensors", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+      {"path": "artifacts/property/tokenizer/tokenizer_config.json", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+      {"path": "artifacts/property/tokenizer/vocab.txt", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+    ],
+    "training_sequences": {
+      "path": "data/training/training.fasta",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "training_data_manifest": {
+      "path": "data/training/dataset_manifest.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "reference_sequences": {
+      "path": "data/antibacterial.fasta",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "generation": {
+    "library_count": 50000,
+    "top_count": 100,
+    "oversampling_factor": 2.0,
+    "batch_size": 128,
+    "max_attempts": 10000,
+    "steps": 64,
+    "temperature": 1.0,
+    "cfg_scale": 1.5,
+    "confidence_reveal_fraction": 0.0,
+    "dfm_stochasticity": 0.0
+  },
+  "conditions": {
+    "condition_names": ["amp_probability", "broad_spectrum_probability", "mean_activity_probability", "mean_gram_negative_activity_probability", "mean_gram_positive_activity_probability", "mean_mdr_activity_probability", "hemolysis_probability", "predicted_log2_mic_summary", "predicted_log2_hc50"],
+    "values": [0.95, 0.95, 0.9, 0.9, 0.9, 0.9, 0.05, 1.0, 4.0],
+    "observed": [true, true, true, true, true, true, true, true, true]
+  },
+  "training_data_manifest_reference": "artifacts.training_data_manifest"
+}

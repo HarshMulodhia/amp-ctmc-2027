@@ -1,155 +1,68 @@
-# AMP Challenge 2027
+# AMP Challenge 2027 submission
 
-## Reproduce generation
+## Local inference artifacts
 
-```bash
-uv sync
-uv run generate --config configs/generate.json --checkpoint checkpoint --output-dir generate_broad_spectrum
-```
+Place the trained files at these repository paths:
 
-Generation is deterministic for fixed checkpoint artifacts, environment, seed, and device. It does not train or download a model. A compatible version-2 checkpoint, the feature/discriminator artifacts, disclosed training FASTA, reference FASTA, vendored scorer weights, and the organizer identity-validator adapter must be supplied locally. The checked-in `checkpoint/weights.csv` alone is not a CTMC checkpoint. Until the organizer validator is configured, generation fails closed because the official identity calculation cannot be inferred from edit distance.
+- `artifacts/ctmc/model.pt` and `artifacts/ctmc/config.json`: version-2 CTMC checkpoint and its training configuration.
+- `artifacts/property/model.pt`, `artifacts/property/model_metadata.json`, `artifacts/property/backbone/`, and `artifacts/property/tokenizer/`: trained multitask property model, local ESM backbone, tokenizer, and strain metadata.
+- `data/training/training.fasta` and `data/training/dataset_manifest.json`: disclosed training sequences and their provenance manifest.
+- `data/antibacterial.fasta`: organizer reference sequences.
 
-Outputs are `library.fasta`, `top.fasta`, `scores.csv`, `score_components.json`, `run_manifest.json`, and `compliance_report.json` in the selected output directory. The top list is inserted into the library before remaining library selection.
-
-See [TRAINING.md](TRAINING.md), [DATA_CARD.md](DATA_CARD.md), [MODEL_CARD.md](MODEL_CARD.md), and [SUBMISSION.md](SUBMISSION.md) for data preparation, model behavior, and the current release requirements.
-
-> International competition for generative AI in antimicrobial peptide design.
-
-Antimicrobial resistance is one of the most pressing global health challenges. This competition invites participants to develop generative models that design novel antimicrobial peptides (AMPs) with activity against a panel of clinically relevant bacterial strains, including multi-drug resistant ESKAPE pathogens.
-
-## Submission Requirements
-
-### Minimum (benchmark participation)
-- Abstract summarizing the method
-- Library of 50,000 designed AMPs
-- Ranked top-100 candidates with selection/ranking documentation
-- Short summary of training data, external databases, and any filters applied
-- GitHub repository (private is fine) with model weights and inference code; grant read access to [@RasmusML](https://github.com/RasmusML) and [@szymczakpau](https://github.com/szymczakpau)
-
-### Full (co-authorship eligibility)
-All of the above, plus:
-- Public GitHub repository with model weights, inference code, and usage docs
-- Permissive OSI-approved license (MIT, BSD-3-Clause, or Apache 2.0)
-- Uses **[`uv`](https://docs.astral.sh/uv/concepts/projects/init/#projects)** for dependency management (include `uv.lock` and a defined Python version)
-- Entry point runnable via `uv run generate` generating the 50,000-member library and top-100 list; any additional arguments must have defaults
-- Fixed default random seed (identical output on repeated runs)
-- Full training data disclosure; any non-public data must be released under a permissive license
-
-## Sequence Requirements
-
-Generated sequences must:
-
-- Use only the 20 standard proteinogenic amino acids (`ACDEFGHIKLMNPQRSTVWY`)
-- Be between 8 and 50 residues long
-- Be unique (no duplicates)
-- Be linear with free termini (no terminal modifications, including amidation)
-- Exclude noncanonical amino acids, stapled peptides, peptidomimetics, and chemically modified variants (lipidated, glycosylated, PEGylated, dendrimeric, etc.)
-
-The full 50,000-sequence library must additionally contain no sequences identical to known antibacterial peptides in `data/antibacterial.fasta`. The top-100 list is held to a stricter standard: no sequence may exceed 80% sequence identity (Levenshtein ratio) with any sequence in that reference set.
-
-## Getting Started
-
-This repository also serves as a working example — see [src/amp_challenge_2027/generate.py](src/amp_challenge_2027/generate.py) for a complete implementation that meets all requirements.
-
-The steps below walk through building a minimal submission. Replace `my-model` with your model name throughout.
-
-### 1. Initialize the project
+Generate `artifacts/manifest.json` after placing all files:
 
 ```bash
-uv init --package my-model
-cd my-model
+uv run python scripts/build_artifact_manifest.py
 ```
 
-### 2. Add the entry point
+The manifest pins every artifact by SHA-256, records the CTMC vocabulary/token IDs and architecture, identifies the training-data manifest, records the official identity source commit, and fixes the seed and output paths. Generation fails before model loading if a required artifact is missing or its hash differs.
 
-In `pyproject.toml`, add a `[project.scripts]` section:
+## Generate
 
-```toml
-[project.scripts]
-generate = "my_model.generate:main"
-```
-
-Note: to add package dependencies, use `uv add <package>` instead of editing `pyproject.toml` directly.
-
-### 3. Implement `generate.py`
-
-Running the entry point produces two files in a `generate/` subdirectory:
-
-```
-generate/
-  library.fasta  ← full 50,000-sequence library
-  top.fasta      ← top-100 ranked sequences
-```
-
-
-See [src/amp_challenge_2027/generate.py](src/amp_challenge_2027/generate.py) for a complete example.
-
-### 4. Run locally
-
-Install dependencies and test your script:
+From the repository root, with no required arguments:
 
 ```bash
 uv run generate
 ```
 
-Optional arguments (must have defaults):
+The deterministic outputs are `generate/library.fasta` (50,000 sequences) and `generate/top.fasta` (100 sequences). Generation loads only local checkpoint/tokenizer files and sets Hugging Face offline mode. It does not train or fetch datasets or model weights.
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--n-sequences` | `50000` | Number of sequences to generate |
-| `--top-k` | `100` | Number of top-ranked sequences to write |
-| `--seed` | `42` | Random seed for reproducibility |
-| `--length` | `50` | Length of each generated sequence |
-
-### 5. Verify
-
-Push your project (including `uv.lock`) to a **public** GitHub repository, then run the validator:
+## Validate and rehearse
 
 ```bash
-uv run python scripts/verify_submission.py <github-url>
+uv run python scripts/validate_submission.py
+uv run python scripts/rehearse_submission.py
 ```
 
+The rehearsal runs the normal `generate` entry point twice in fresh output directories, validates both FASTA pairs, and compares SHA-256 hashes.
 
-### 6. Submit
+## Hardware estimate
 
-To submit, head to the Kaggle competition page: https://www.kaggle.com/competitions/amp-challenge
+CUDA is used when available; otherwise inference uses CPU. An RTX 4090-class GPU with 24 GiB VRAM and 32 GiB host memory are planning estimates only; peak memory and generation time have **not been measured**. CPU generation time has **not been measured**.
 
-## Validation
+## Disclosures
 
-Verify your submission with:
+Training-data sources and provenance belong in [DATA.md](DATA.md) and the referenced `data/training/dataset_manifest.json`. External model details and limitations belong in [MODEL_CARD.md](MODEL_CARD.md). The implemented method and official-validator provenance are documented in [METHOD.md](METHOD.md) and [OFFICIAL_VALIDATOR_SOURCE.md](OFFICIAL_VALIDATOR_SOURCE.md).
+
+No trained CTMC or property-model checkpoint is included in this checkout. The checked-in manifest example contains placeholder hashes and is not a runnable model manifest.
+
+## Training exports
+
+Prepare the property-training Parquet table with train/validation/test cluster assignments, then set the exact challenge panel IDs and group membership in `configs/train_property.json`. Empty panel lists are deliberate placeholders and property export rejects them. The property run exports its checkpoint and local model files to `artifacts/property/`, and writes the training FASTA and provenance manifest under `data/training/`.
 
 ```bash
-uv run python scripts/verify_submission.py <github-url>
+uv run python scripts/train_property_model.py --data data/processed/observations.parquet --output artifacts/property
+uv run python scripts/build_measured_conditions.py --observations data/processed/observations.parquet --split-manifest data/training/split_manifest.csv --property-metadata artifacts/property/model_metadata.json --output artifacts/conditions/measured_conditions.jsonl
+uv run python scripts/train_ctmc.py --config configs/train_ctmc.json
+uv run python scripts/build_artifact_manifest.py
+uv run generate
 ```
 
-This clones your repo, installs dependencies, generates the full library and ranked top-100 into `generate/library.fasta` and `generate/top.fasta`, verifies both files, then generates them again to confirm the output is reproducible.
+The default CTMC command uses `training_mode: unconditional`. Property conditioning uses a separate local prediction cache; property inference is never part of a CTMC epoch:
 
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `url` | — | GitHub repository URL (required positional) |
-| `--branch` | repo default | Git branch to clone |
-| `--dir` | `submission/` | Directory to clone into |
-| `--extra` | — | Optional [uv](https://docs.astral.sh/uv/concepts/projects/init/#projects) extras to install (repeatable) |
-| `--antibacterial-fasta` | `data/antibacterial.fasta` | FASTA file of known antibacterial sequences to check for overlap |
-
-## Starter Kits
-
-The following starter kits are compatible with this submission format:
-
-- [ampdiffusion-starter-kit](https://github.com/szczurek-lab/ampdiffusion-starter-kit)
-- [hydramp-starter-kit](https://github.com/szczurek-lab/hydramp-starter-kit)
-
-## Project Structure
-
+```bash
+uv run python scripts/cache_property_conditions.py --checkpoint artifacts/property --fasta data/training/training.fasta --output artifacts/conditions/ctmc_conditions.jsonl --batch-size 32
+uv run python scripts/train_ctmc.py --config configs/train_ctmc_property.json
 ```
-amp-challenge-2027/
-├── checkpoint/
-│   └── weights.csv          # Trained model weights
-├── scripts/
-│   └── verify_submission.py # Submission validator
-├── src/
-│   └── amp_challenge_2027/
-│       └── generate.py      # Entry point: sequence generation logic
-├── pyproject.toml
-└── uv.lock
-```
+
+The measured-condition builder uses train-split rows only, aggregates replicates by median, retains assay/censoring/uncertainty audits, and masks conditions that fail panel or group coverage thresholds. Add `--measured artifacts/conditions/measured_conditions.jsonl` to the cache command to give those measured fields precedence; teacher predictions fill only missing fields. Each wide row has `sequence`, explicit `condition_names` in `CONDITION_NAMES` order, plus `values`, `observed`, `provenance`, and `uncertainty` maps. Provenance values are `measured`, `teacher`, `derived`, or `missing`. Activity threshold, temperature, strain groups, and conservative broad aggregation come from property-model metadata. CTMC normalization is fitted only on observed train-split cache entries, stored in the checkpoint, and reused for validation and generation. The cache is create-once and its adjacent `.manifest.json` records schema, semantics, model hashes, and table SHA-256. Property-conditioned training verifies complete sequence coverage and at least one observation. The CTMC trainer exports to the established `artifacts/ctmc/` path. The manifest builder requires the local organizer reference at `data/antibacterial.fasta`; it never downloads model or data files.

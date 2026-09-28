@@ -2,6 +2,11 @@ import numpy as np
 import pytest
 
 from amp_ctmc_2027.external_scorer import VendoredScorerClient
+from amp_ctmc_2027.objectives import (
+    ActivityHemolysisScorer,
+    MultiObjectiveScorer,
+    ScoringContext,
+)
 
 
 def test_external_scorer_failure_is_not_replaced_by_neutral(monkeypatch, tmp_path):
@@ -29,3 +34,19 @@ def test_external_scorer_rejects_malformed_output(monkeypatch, tmp_path):
     )
     with pytest.raises(ValueError, match="Invalid scorer output"):
         client.score(["ACDEFGHI"])
+
+
+def test_nonzero_weight_scorer_failure_aborts_scoring(monkeypatch, tmp_path):
+    client = VendoredScorerClient(tmp_path)
+
+    def fail(_payload):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(client, "_invoke", fail)
+    context = ScoringContext([], [], None, None, None, None, None, client)
+    scorer = MultiObjectiveScorer(
+        [ActivityHemolysisScorer()], {"activity_hemolysis": 1.0}
+    )
+
+    with pytest.raises(RuntimeError, match="offline"):
+        scorer.score(["ACDEFGHI", "KLMNPQRS"], context)

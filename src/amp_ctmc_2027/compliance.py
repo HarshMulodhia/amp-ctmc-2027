@@ -5,6 +5,9 @@ from __future__ import annotations
 import hashlib
 import importlib
 from collections import Counter
+from pathlib import Path
+
+from Bio import SeqIO
 
 
 def load_official_identity(spec: str | None):
@@ -31,6 +34,7 @@ def validate_submission(
     alphabet: str = "ACDEFGHIKLMNPQRSTVWY",
     expected_library_count: int | None = 50000,
     expected_top_count: int | None = 100,
+    training_sequences: list[str] | None = None,
 ) -> dict:
     """Enforce sequence rules, top membership, and organizer identity threshold.
 
@@ -57,10 +61,10 @@ def validate_submission(
         raise ValueError(
             f"Expected exactly {expected_top_count} ranked sequences; found {len(top)}"
         )
-    overlap = set(library).intersection(references)
+    overlap = set(library).intersection(set(references).union(training_sequences or []))
     if overlap:
         raise ValueError(
-            f"Library contains {len(overlap)} exact organizer reference sequence(s)"
+            f"Library contains {len(overlap)} exact organizer reference or training sequence collision(s)"
         )
     if not set(top).issubset(library):
         raise ValueError("Every ranked top sequence must occur in the library")
@@ -93,3 +97,52 @@ def validate_submission(
         "length_histogram": dict(sorted(Counter(map(len, library)).items())),
         "reference_sha256": hashlib.sha256("\n".join(references).encode()).hexdigest(),
     }
+
+
+def validate_fasta_files(
+    library_path: Path,
+    top_path: Path,
+    references: list[str],
+    training_sequences: list[str],
+    *,
+    identity_function=None,
+    threshold: float = 0.8,
+    expected_library_count: int = 50000,
+    expected_top_count: int = 100,
+) -> dict:
+    """Authoritative parser and content validation for produced FASTA files."""
+    from amp_ctmc_2027.official_identity import official_identity
+
+    identity_function = identity_function or official_identity
+
+    def read(path: Path) -> tuple[list[str], list[str]]:
+        records = list(SeqIO.parse(str(path), "fasta"))
+        if not records:
+            raise ValueError(f"FASTA is empty or malformed: {path}")
+        ids = [record.id for record in records]
+        if any(not record.description.strip() for record in records):
+            raise ValueError(f"FASTA record has an empty header: {path}")
+        if any(record.description.strip() != record.id for record in records):
+            raise ValueError(f"FASTA header has unsupported description fields: {path}")
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"FASTA contains duplicate headers: {path}")
+        return ids, [str(record.seq).upper() for record in records]
+
+    library_headers, library = read(library_path)
+    top_headers, top = read(top_path)
+    if library_headers != [f"seq{i}" for i in range(1, len(library) + 1)]:
+        raise ValueError(
+            "Library FASTA headers do not match the challenge template format"
+        )
+    if top_headers != [f"seq{i}" for i in range(1, len(top) + 1)]:
+        raise ValueError("Top FASTA headers do not match the challenge template format")
+    return validate_submission(
+        library,
+        top,
+        references,
+        identity_function=identity_function,
+        threshold=threshold,
+        expected_library_count=expected_library_count,
+        expected_top_count=expected_top_count,
+        training_sequences=training_sequences,
+    )

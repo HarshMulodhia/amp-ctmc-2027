@@ -3,7 +3,7 @@
   "n_epochs": 200,
   "batch_size": 256,
   "learning_rate": 0.0003,
-  "checkpoint_dir": "checkpoint",
+  "checkpoint_dir": "artifacts/ctmc",
   "training_fasta_path": "data/training/training.fasta",
   "background_fasta_path": "data/generic/background.fasta",
   "debug_overfit_samples": null,
@@ -12,5 +12,5 @@
   "ctmc_pretraining_mode": "none",
   "condition_dim": 9,
   "condition_dropout": 0.1,
-  "cfg_scale": 1.0
+  "cfg_scale": 0.0
 }

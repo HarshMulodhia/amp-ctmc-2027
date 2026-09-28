@@ -1,0 +1,24 @@
+{
+  "model_name": "data/pretrained/esm2_t12_35M_UR50D",
+  "pretrained_model_id": "facebook/esm2_t12_35M_UR50D",
+  "pretrained_revision": "6fbf070e65b0b7291e7bbcd451118c216cff79d8",
+  "revision": null,
+  "epochs": 3,
+  "batch_size": 64,
+  "max_length": 64,
+  "mixed_precision": true,
+  "unfreeze_last_n_layers": 4,
+  "gradient_accumulation_steps": 1,
+  "seed": 42,
+  "early_stopping": true,
+  "output": "artifacts/property",
+  "activity_threshold_log2_mic": 4.0,
+  "activity_temperature": 1.0,
+  "broad_spectrum_aggregation": {"method": "minimum"},
+  "ranking_strains": ["A_baumannii_ATCC19606", "E_coli_ATCC11775", "E_coli_AIC221", "E_coli_AIC222", "K_pneumoniae_ATCC13883", "P_aeruginosa_PAO1", "P_aeruginosa_PA14", "S_aureus_ATCC12600", "S_aureus_ATCC_BAA1556", "E_faecalis_ATCC700802", "E_faecium_ATCC700221"],
+  "strain_groups": {
+    "gram_negative": ["A_baumannii_ATCC19606", "E_coli_ATCC11775", "E_coli_AIC221", "E_coli_AIC222", "K_pneumoniae_ATCC13883", "P_aeruginosa_PAO1", "P_aeruginosa_PA14"],
+    "gram_positive": ["S_aureus_ATCC12600", "S_aureus_ATCC_BAA1556", "E_faecalis_ATCC700802", "E_faecium_ATCC700221"],
+    "mdr": ["E_coli_AIC222", "S_aureus_ATCC_BAA1556", "E_faecalis_ATCC700802", "E_faecium_ATCC700221"]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "seed": 42,
+  "n_epochs": 20,
+  "batch_size": 64,
+  "learning_rate": 0.0003,
+  "checkpoint_dir": "artifacts/ctmc_unconditional",
+  "training_fasta_path": "data/training/training.fasta",
+  "background_fasta_path": "data/training/background.fasta",
+  "cluster_split_manifest_path": "data/processed/deadline_split_manifest.csv",
+  "wandb_enabled": false,
+  "wandb_mode": "disabled",
+  "training_mode": "unconditional",
+  "condition_dim": 9,
+  "condition_dropout": 0.0,
+  "cfg_scale": 0.0,
+  "mixed_precision": true,
+  "checkpoint_every_epoch": true,
+  "resume": true,
+  "early_stopping": true,
+  "ctmc_pretraining_mode": "none"
+}

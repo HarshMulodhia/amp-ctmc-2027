@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "source_hashes": {
+    "amp_diffusion_train_eval": "424e1ae8b40bb0e6367251be930caf704673d27b0e583082a119f77d89e48a97",
+    "grampa": "9e33122afb3bdd169e8bed620b1040bf1601d60cf25b6c8c8d9870bf37522b6f",
+    "cleaned_hc50": "adee9ec2d1cacbfb26db35984ac1e2914d25927d425a76af016258745fd5cf1c",
+    "hemopi2_cross_val": "7bdaf3ede499d1eda2712585d2e52d7700f3f138776d1a0a46e2ca88e8152da0",
+    "hemopi2_independent": "500013c2244219762ff3ff4a03401c7419790c83d0ef0c3aeebfdbea426b3eb5",
+    "amplify_amp_positive": "a04e28f8d29d1bb4f445a6162e210e0999289c31bf93f2f13c8d2268c8dd9cdc",
+    "amplify_non_amp": "02161c5d18ff8c5c8c712527fb84a9c51606a46b11ad987cd91c60306acd25a3",
+    "organizer_reference": "cbbeac64ba95746d87961e8ad9dd0849ae8058d15a300b2e7f6990730ca521e9"
+  },
+  "observation_table_sha256": "ca74b4a4f21ed5f74c0a46086af4b2665b7de2695ea8d572388ade455452e13b",
+  "split_manifest_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
+  "split_method": "deterministic_exact_sequence_hash",
+  "homology_split": false,
+  "seed": 42,
+  "split_proportions": {
+    "train": 0.8,
+    "val": 0.1,
+    "test": 0.1
+  },
+  "split_counts": {
+    "train": 18943,
+    "val": 2287,
+    "test": 2424
+  },
+  "observation_rows": 243823,
+  "unique_sequences": 23654,
+  "positive_sequences": 19541,
+  "background_sequences": 2974,
+  "strain_groups": {
+    "gram_negative": [
+      "A_baumannii_ATCC19606",
+      "E_coli_ATCC11775",
+      "E_coli_AIC221",
+      "E_coli_AIC222",
+      "K_pneumoniae_ATCC13883",
+      "P_aeruginosa_PAO1",
+      "P_aeruginosa_PA14"
+    ],
+    "gram_positive": [
+      "S_aureus_ATCC12600",
+      "S_aureus_ATCC_BAA1556",
+      "E_faecalis_ATCC700802",
+      "E_faecium_ATCC700221"
+    ],
+    "mdr": [
+      "E_coli_AIC222",
+      "S_aureus_ATCC_BAA1556",
+      "E_faecalis_ATCC700802",
+      "E_faecium_ATCC700221"
+    ]
+  },
+  "panel_note": "11-strain proxy panel; not the complete official 20-strain wet-lab panel",
+  "alias_audit": "AIG221/AIG222 source names explicitly mapped to official AIC221/AIC222 identifiers",
+  "measured_precedence": "measured_public_database supersedes pseudo_apex_or_source_model at condition aggregation; raw observations retained",
+  "ctmc_training_fasta": "/tmp/amp-ctmc-deadline-smoke-ba5jqo4y/training.fasta",
+  "ctmc_training_fasta_sha256": "cc73e8b3da04481042fc53e1a2988bc1ba7ddd41f51551f588a88dbc2ba14a2f",
+  "ctmc_cluster_split_manifest": "/tmp/amp-ctmc-deadline-smoke-ba5jqo4y/splits.csv",
+  "ctmc_cluster_split_sha256": "c0acc9c6e2cba82d125c0075b79df57177cba256635818c8e57d05b2781eecbb",
+  "ctmc_train_count": 8,
+  "ctmc_validation_count": 8,
+  "ctmc_checkpoint_format_version": 2
+}

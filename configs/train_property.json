@@ -1,6 +1,16 @@
 {
   "model_name": "facebook/esm2_t30_150M_UR50D",
   "revision": null,
+  "ranking_strains": [],
+  "activity_threshold_log2_mic": 4.0,
+  "activity_temperature": 1.0,
+  "broad_spectrum_aggregation": {"method": "minimum"},
+  "strain_groups": {
+    "gram_positive": [],
+    "gram_negative": [],
+    "mdr": []
+  },
+  "sequence_clustering_threshold": 0.4,
   "fallback_model_name": "facebook/esm2_t12_35M_UR50D",
   "max_length": 50,
   "frozen_head_epochs": 3,

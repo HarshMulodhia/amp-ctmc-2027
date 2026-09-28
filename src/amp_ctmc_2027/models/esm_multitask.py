@@ -7,6 +7,8 @@ does not gain an undeclared runtime dependency.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import pickle
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -98,6 +100,7 @@ class ESMMultiTaskPredictor(nn.Module):
         model_name: str = "facebook/esm2_t30_150M_UR50D",
         revision: str | None = None,
         strain_count: int = 1,
+        local_files_only: bool = False,
     ) -> tuple[ESMMultiTaskPredictor, object]:
         try:
             from transformers import AutoTokenizer, EsmModel
@@ -105,9 +108,70 @@ class ESMMultiTaskPredictor(nn.Module):
             raise RuntimeError(
                 "Install the training extra `transformers` to load an ESM property model"
             ) from exc
-        tokenizer = AutoTokenizer.from_pretrained(model_name, revision=revision)
-        backbone = EsmModel.from_pretrained(model_name, revision=revision)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, revision=revision, local_files_only=local_files_only
+        )
+        backbone = EsmModel.from_pretrained(
+            model_name, revision=revision, local_files_only=local_files_only
+        )
         return cls(backbone, int(backbone.config.hidden_size), strain_count), tokenizer
+
+    @classmethod
+    def from_local_artifacts(
+        cls,
+        checkpoint_path: Path,
+        backbone_dir: Path,
+        tokenizer_dir: Path,
+        metadata_path: Path,
+        device: torch.device,
+    ) -> tuple[ESMMultiTaskPredictor, object]:
+        """Reconstruct the trained predictor from local files only, strictly."""
+        import json
+
+        try:
+            from transformers import AutoTokenizer, EsmModel
+        except ImportError as exc:
+            raise RuntimeError(
+                "Transformers is required for the property model"
+            ) from exc
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        backbone = EsmModel.from_pretrained(str(backbone_dir), local_files_only=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            str(tokenizer_dir), local_files_only=True
+        )
+        strain_ids = metadata.get("strain_ids")
+        if not isinstance(strain_ids, dict):
+            raise ValueError("Property metadata has no strain_ids mapping")
+        hidden_size = int(backbone.config.hidden_size)
+        strain_dim = int(metadata.get("strain_dim", 64))
+        model = cls(backbone, hidden_size, len(strain_ids), strain_dim=strain_dim)
+        try:
+            payload = torch.load(
+                checkpoint_path, map_location=device, weights_only=True
+            )
+        except (EOFError, OSError, pickle.UnpicklingError, RuntimeError) as exc:
+            raise ValueError(
+                f"Unable to deserialize property checkpoint {checkpoint_path}: {exc}"
+            ) from exc
+        if not isinstance(payload, dict) or payload.get("checkpoint_version") != 1:
+            raise ValueError("Unsupported property checkpoint format")
+        expected_architecture = {
+            "hidden_size": hidden_size,
+            "strain_count": len(strain_ids),
+            "strain_dim": strain_dim,
+        }
+        if payload.get("architecture") != expected_architecture:
+            raise ValueError("Property checkpoint architecture does not match metadata")
+        state = payload.get("state_dict")
+        if not isinstance(state, dict):
+            raise ValueError("Property checkpoint has no state_dict")
+        for name, tensor in state.items():
+            if not isinstance(tensor, torch.Tensor) or not torch.isfinite(tensor).all():
+                raise ValueError(f"Property checkpoint parameter {name!r} is invalid")
+        model.load_state_dict(state, strict=True)
+        model.to(device)
+        model.eval()
+        return model, tokenizer
 
     def forward(
         self,
@@ -134,6 +198,47 @@ class ESMMultiTaskPredictor(nn.Module):
             self.amp_head(pooled).squeeze(-1),
             mic[:, 0],
             mic[:, 1].clamp(-6, 4),
+            self.hemo_head(pooled).squeeze(-1),
+            hc[:, 0],
+            hc[:, 1].clamp(-6, 4),
+            pooled,
+        )
+
+    def forward_panel(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        strain_ids: torch.Tensor,
+    ) -> PropertyOutput:
+        """Score a strain panel with one backbone pass and tensorized MIC heads.
+
+        `strain_ids` is [S]. Scalar task heads are evaluated once per sequence;
+        MIC outputs are [B, S].
+        """
+        output = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
+        hidden = output.last_hidden_state
+        special = torch.zeros_like(attention_mask, dtype=torch.bool)
+        for token_name in ("bos_token_id", "eos_token_id"):
+            token_id = getattr(self.backbone.config, token_name, None)
+            if token_id is not None:
+                special |= input_ids.eq(token_id)
+        residue_mask = attention_mask.bool() & ~special
+        pooled = (hidden * residue_mask.unsqueeze(-1)).sum(1) / residue_mask.sum(
+            1, keepdim=True
+        ).clamp_min(1)
+        if strain_ids.ndim != 1 or strain_ids.numel() == 0:
+            raise ValueError("Panel strain_ids must be a nonempty [S] tensor")
+        batch, strains = pooled.shape[0], strain_ids.shape[0]
+        strain = self.strain_embedding(strain_ids).unsqueeze(0).expand(batch, -1, -1)
+        expanded = pooled.unsqueeze(1).expand(-1, strains, -1)
+        mic = self.mic_head(
+            torch.cat((expanded, strain), dim=-1).reshape(batch * strains, -1)
+        ).reshape(batch, strains, 2)
+        hc = self.hc50_head(pooled)
+        return PropertyOutput(
+            self.amp_head(pooled).squeeze(-1),
+            mic[..., 0],
+            mic[..., 1].clamp(-6, 4),
             self.hemo_head(pooled).squeeze(-1),
             hc[:, 0],
             hc[:, 1].clamp(-6, 4),

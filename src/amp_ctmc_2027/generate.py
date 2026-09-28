@@ -1,44 +1,36 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
-from amp_ctmc_2027.config import AMPConfig
-from amp_ctmc_2027.data.fasta_io import FastaRepository
-from amp_ctmc_2027.pipeline.generation_pipeline import GenerationPipeline
+from amp_ctmc_2027.submission import DEFAULT_MANIFEST, generate_from_manifest
+
+REPOSITORY_ROOT = Path(
+    os.environ.get("AMP_REPOSITORY_ROOT", Path(__file__).resolve().parents[2])
+).resolve()
 
 
-def parse_args() -> argparse.Namespace:
+def main(argv: list[str] | None = None) -> None:
+    """Official no-required-arguments entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate broad-spectrum AMP challenge outputs"
+        description="Generate AMP Challenge submission FASTA files"
     )
-    parser.add_argument("--config", type=Path, default=Path("configs/generate.json"))
-    parser.add_argument("--checkpoint", type=Path)
-    parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--device", choices=["auto", "cuda", "mps", "cpu"])
-    parser.add_argument("--seed", type=int)
-    return parser.parse_args()
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--seed", type=int, default=None)
+    args = parser.parse_args(argv)
+    generate_from_manifest(
+        REPOSITORY_ROOT,
+        args.manifest,
+        output_dir=args.output_dir,
+        seed=args.seed,
+    )
 
 
 def generate_broad_spectrum() -> None:
-    """Challenge entry point for broad-spectrum generation."""
-    args = parse_args()
-    config = AMPConfig.from_json_file(args.config)
-    if args.checkpoint is not None:
-        config.checkpoint_dir = args.checkpoint
-    if args.output_dir is not None:
-        config.generate_dir = args.output_dir
-    if args.device is not None:
-        config.device = args.device
-    if args.seed is not None:
-        config.seed = args.seed
-    pipeline = GenerationPipeline(config=config, fasta_repo=FastaRepository(Path.cwd()))
-    pipeline.run()
-
-
-def main() -> None:
-    generate_broad_spectrum()
+    main()
 
 
 if __name__ == "__main__":
-    generate_broad_spectrum()
+    main()

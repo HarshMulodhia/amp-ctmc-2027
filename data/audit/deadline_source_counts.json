@@ -1,0 +1,35 @@
+{
+  "rows_by_source": {
+    "amp_diffusion_train_eval": 207460,
+    "grampa": 27116,
+    "cleaned_hc50": 1339,
+    "hemopi2_cross_val": 1526,
+    "hemopi2_independent": 382,
+    "amplify_amp_positive": 2988,
+    "amplify_non_amp": 3012
+  },
+  "observation_rows": 243823,
+  "unique_sequences": 23654,
+  "positive_sequences": 19541,
+  "background_sequences": 2974,
+  "rejected_rows": 11627,
+  "uncertain_modification_rows": 22244,
+  "strain_mapping": {
+    "A_baumannii_ATCC19606": "A. baumannii ATCC19606",
+    "E_coli_ATCC11775": "E. coli ATCC11775",
+    "E_coli_AIC221": "E. coli AIG221",
+    "E_coli_AIC222": "E. coli AIG222",
+    "K_pneumoniae_ATCC13883": "K. pneumoniae ATCC13883",
+    "P_aeruginosa_PAO1": "P. aeruginosa PAO1",
+    "P_aeruginosa_PA14": "P. aeruginosa PA14",
+    "S_aureus_ATCC12600": "S. aureus ATCC12600",
+    "S_aureus_ATCC_BAA1556": "S. aureus (ATCC BAA-1556) - MRSA",
+    "E_faecalis_ATCC700802": "vancomycin-resistant E. faecalis ATCC700802",
+    "E_faecium_ATCC700221": "vancomycin-resistant E. faecium ATCC700221"
+  },
+  "explicit_aliases": {
+    "E. coli AIG221": "E_coli_AIC221",
+    "E. coli AIG222": "E_coli_AIC222"
+  },
+  "panel_note": "11-strain proxy panel; not the complete official 20-strain wet-lab panel"
+}

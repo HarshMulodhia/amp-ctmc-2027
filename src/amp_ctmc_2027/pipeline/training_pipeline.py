@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import logging
 from dataclasses import asdict
+from pathlib import Path
 
 import torch
 import torch.nn.functional as F
@@ -14,11 +16,23 @@ from tqdm import tqdm
 
 from amp_ctmc_2027.config import AMPConfig, set_global_determinism
 from amp_ctmc_2027.core import (
+    CONDITION_NAMES,
+    ConditionVector,
     CTMCDenoiser,
     SinSquaredSchedule,
     initialize_amino_acid_embeddings,
 )
-from amp_ctmc_2027.data.dataset import AMPCanvasEncoder, AMPDataset
+from amp_ctmc_2027.data.dataset import (
+    AMPCanvasEncoder,
+    AMPDataset,
+    ConditionedAMPDataset,
+    collate_conditioned,
+)
+from amp_ctmc_2027.data.conditions import (
+    fit_condition_normalization,
+    load_condition_table,
+    panel_semantic_definition,
+)
 from amp_ctmc_2027.data.fasta_io import FastaRepository
 from amp_ctmc_2027.data.manifests import sha256_file, write_manifest
 from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, PeptideFeatureExtractor
@@ -66,6 +80,20 @@ class TrainingPipeline:
         power = 2.0 + 3.0 * (1.0 - warmup_frac)
         return 1.0 - (1.0 - base).pow(power)
 
+    def _load_condition_rows(self, sequences: list[str]) -> tuple[list[dict], dict]:
+        if (
+            self.config.condition_table_path is None
+            or self.config.condition_manifest_path is None
+        ):
+            raise ValueError(
+                "property_conditioned mode requires a condition table and manifest"
+            )
+        return load_condition_table(
+            self.repo.resolve(self.config.condition_table_path),
+            self.repo.resolve(self.config.condition_manifest_path),
+            sequences,
+        )
+
     def _loss_for_batch(
         self,
         model: CTMCDenoiser,
@@ -74,6 +102,9 @@ class TrainingPipeline:
         epoch: int = 0,
         total_epochs: int = 1,
         validation: bool = False,
+        condition_values: torch.Tensor | None = None,
+        condition_observed: torch.Tensor | None = None,
+        force_unconditional: bool = False,
     ) -> tuple[torch.Tensor | None, dict[str, float]]:
         batch_size = clean.size(0)
         if validation:
@@ -94,12 +125,36 @@ class TrainingPipeline:
             "eos_targets": 0.0,
             "length_loss": 0.0,
             "length_acc": 0.0,
+            "condition_drop_fraction": 0.0,
         }
         if not torch.any(supervised):
             return None, stats
 
-        logits = model(x_t, t)
-        masked_logits = logits[supervised]
+        conditions = None
+        if (
+            condition_values is not None
+            and self.config.training_mode == "property_conditioned"
+            and not force_unconditional
+        ):
+            observed = condition_observed.bool().clone()
+            drop = (
+                torch.zeros(batch_size, dtype=torch.bool, device=clean.device)
+                if validation
+                else torch.rand(batch_size, device=clean.device)
+                < self.config.condition_dropout
+            )
+            observed[drop] = False
+            conditions = ConditionVector(condition_values, observed)
+            stats["condition_drop_fraction"] = float(drop.float().mean().item())
+        use_amp = (
+            self.config.mixed_precision
+            and clean.device.type == "cuda"
+            and torch.cuda.is_bf16_supported()
+        )
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=use_amp):
+            logits = model(x_t, t, conditions)
+            length_logits = model.predict_length_logits(x_t, t, conditions)
+        masked_logits = logits[supervised].float()
         masked_target = clean[supervised]
         loss = F.cross_entropy(masked_logits, masked_target, label_smoothing=0.05)
 
@@ -116,8 +171,7 @@ class TrainingPipeline:
         length_target = (true_lengths - self.config.min_length).clamp(
             0, self.config.max_length - self.config.min_length
         )
-        length_logits = model.predict_length_logits(x_t, t)
-        length_loss = F.cross_entropy(length_logits, length_target)
+        length_loss = F.cross_entropy(length_logits.float(), length_target)
         total_loss = loss + 0.1 * length_loss
 
         length_pred = length_logits.argmax(dim=-1)
@@ -125,6 +179,12 @@ class TrainingPipeline:
         stats["length_loss"] = float(length_loss.item())
         stats["length_acc"] = float(length_acc.item())
 
+        stats["conditional_denoising_loss"] = (
+            float(total_loss.item()) if conditions is not None else 0.0
+        )
+        stats["unconditional_denoising_loss"] = (
+            float(total_loss.item()) if conditions is None else 0.0
+        )
         return total_loss, stats
 
     @staticmethod
@@ -148,6 +208,9 @@ class TrainingPipeline:
             self.config.n_layers,
             self.config.n_heads,
         )
+
+        split_path = self.repo.resolve(self.config.cluster_split_manifest_path)
+        split_hash = sha256_file(split_path) if split_path.is_file() else None
 
         training_sequences = self.repo.read_sequences(self.config.training_fasta_path)
         background_sequences = self.repo.read_sequences(
@@ -177,7 +240,6 @@ class TrainingPipeline:
                 "OVERFIT DEBUG MODE: train and val use the same %d sequences", n
             )
         else:
-            split_path = self.repo.resolve(self.config.cluster_split_manifest_path)
             if not split_path.exists():
                 raise FileNotFoundError(
                     f"Production CTMC training requires a cluster-level split manifest: {split_path}"
@@ -206,28 +268,125 @@ class TrainingPipeline:
             val_sequences = [
                 s for s in training_sequences if sequence_split[s][1] == "val"
             ]
+            missing_background = sorted(set(background_sequences) - set(sequence_split))
+            if missing_background:
+                raise ValueError(
+                    f"Background FASTA has {len(missing_background)} sequences absent from split manifest"
+                )
+            background_sequences = [
+                sequence
+                for sequence in background_sequences
+                if sequence_split[sequence][1] == "train"
+            ]
             if not train_sequences or not val_sequences:
                 raise ValueError(
                     "Cluster split manifest requires nonempty train and val splits"
                 )
+            if not background_sequences:
+                raise ValueError(
+                    "Cluster split has no train-split background sequences"
+                )
+
+        if split_hash is None:
+            split_hash = hashlib.sha256(
+                ("debug-train-split\n" + "\n".join(train_sequences)).encode()
+            ).hexdigest()
 
         device = resolve_device(self.config)
         log_device(device)
         pin_memory = device.type == "cuda"
 
-        train_dataset = AMPDataset(train_sequences, encoder)
-        val_dataset = AMPDataset(val_sequences, encoder)
+        condition_rows: list[dict] | None = None
+        condition_manifest: dict = {}
+        condition_semantics: dict | None = None
+        condition_normalization: dict | None = None
+        if self.config.training_mode == "property_conditioned":
+            if split_hash is None:
+                raise ValueError(
+                    "Property-conditioned training requires the hashed CTMC split manifest"
+                )
+            condition_rows, condition_manifest = self._load_condition_rows(
+                training_sequences
+            )
+            condition_semantics = condition_manifest.get("semantic_definition")
+            if not isinstance(condition_semantics, dict):
+                raise ValueError("Condition cache is missing panel semantic definition")
+            property_metadata_path = self.repo.resolve(
+                self.config.property_metadata_path
+            )
+            property_metadata = json.loads(
+                property_metadata_path.read_text(encoding="utf-8")
+            )
+            if condition_manifest.get("property_metadata_sha256") != sha256_file(
+                property_metadata_path
+            ) or condition_manifest.get("property_checkpoint_sha256") != sha256_file(
+                property_metadata_path.parent / "model.pt"
+            ):
+                raise ValueError(
+                    "Condition cache property checkpoint/metadata hashes differ"
+                )
+            if condition_semantics != property_metadata.get("semantic_definition"):
+                raise ValueError(
+                    "Condition cache semantics differ from property-model metadata"
+                )
+            condition_normalization = fit_condition_normalization(
+                condition_rows, train_sequences, split_hash
+            )
+            if not any(any(row["observed"].values()) for row in condition_rows):
+                raise ValueError("Condition table contains no observations")
+            train_dataset = ConditionedAMPDataset(
+                train_sequences, encoder, condition_rows, condition_normalization
+            )
+            val_dataset = ConditionedAMPDataset(
+                val_sequences, encoder, condition_rows, condition_normalization
+            )
+            collate_fn = collate_conditioned
+        else:
+            property_metadata_path = self.repo.resolve(
+                self.config.property_metadata_path
+            )
+            if property_metadata_path.is_file():
+                property_metadata = json.loads(
+                    property_metadata_path.read_text(encoding="utf-8")
+                )
+                condition_semantics = property_metadata.get("semantic_definition")
+                if condition_semantics is not None:
+                    condition_semantics = panel_semantic_definition(
+                        condition_semantics["ranking_strains"],
+                        condition_semantics["strain_groups"],
+                        condition_semantics["activity_threshold_log2_mic"],
+                        condition_semantics["activity_temperature"],
+                        condition_semantics["broad_spectrum_aggregation"],
+                    )
+            train_dataset, val_dataset = (
+                AMPDataset(train_sequences, encoder),
+                AMPDataset(val_sequences, encoder),
+            )
+            collate_fn = None
+            empty_rows = [
+                {
+                    "sequence": sequence,
+                    "values": {name: 0.0 for name in CONDITION_NAMES},
+                    "observed": {name: False for name in CONDITION_NAMES},
+                }
+                for sequence in train_sequences
+            ]
+            condition_normalization = fit_condition_normalization(
+                empty_rows, train_sequences, split_hash
+            )
         train_loader = DataLoader(
             train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
             pin_memory=pin_memory,
+            collate_fn=collate_fn,
         )
         val_loader = DataLoader(
             val_dataset,
             batch_size=self.config.batch_size,
             shuffle=False,
             pin_memory=pin_memory,
+            collate_fn=collate_fn,
         )
 
         model = CTMCDenoiser(
@@ -350,10 +509,21 @@ class TrainingPipeline:
             for batch in tqdm(
                 train_loader, desc=f"train-epoch-{epoch + 1}", leave=False
             ):
-                batch = batch.to(device)
+                if isinstance(batch, dict):
+                    clean = batch["tokens"].to(device)
+                    values = batch["condition_values"].to(device)
+                    observed = batch["condition_observed"].to(device)
+                else:
+                    clean, values, observed = batch.to(device), None, None
                 optimizer.zero_grad(set_to_none=True)
                 loss, stats = self._loss_for_batch(
-                    model, batch, encoder, epoch, self.config.n_epochs
+                    model,
+                    clean,
+                    encoder,
+                    epoch,
+                    self.config.n_epochs,
+                    condition_values=values,
+                    condition_observed=observed,
                 )
                 self._accumulate(train_stats, stats)
                 if loss is not None and loss.requires_grad:
@@ -369,17 +539,81 @@ class TrainingPipeline:
             val_stats: dict[str, float] = {}
             with torch.inference_mode():
                 for batch in val_loader:
-                    batch = batch.to(device)
+                    if isinstance(batch, dict):
+                        clean = batch["tokens"].to(device)
+                        values = batch["condition_values"].to(device)
+                        observed = batch["condition_observed"].to(device)
+                    else:
+                        clean, values, observed = batch.to(device), None, None
                     loss, stats = self._loss_for_batch(
-                        model, batch, encoder, validation=True
+                        model,
+                        clean,
+                        encoder,
+                        validation=True,
+                        condition_values=values,
+                        condition_observed=observed,
                     )
                     self._accumulate(val_stats, stats)
                     if loss is not None:
                         val_loss_total += float(loss.item())
                         val_batches += 1
+                    if values is not None:
+                        provenance = batch["condition_provenance"]
+                        for label in ("measured", "teacher"):
+                            selected = [
+                                idx
+                                for idx, row_sources in enumerate(provenance)
+                                if any(
+                                    source == label and bool(observed[idx, j])
+                                    for j, source in enumerate(row_sources)
+                                )
+                            ]
+                            if selected:
+                                subset_loss, _ = self._loss_for_batch(
+                                    model,
+                                    clean[selected],
+                                    encoder,
+                                    validation=True,
+                                    condition_values=values[selected],
+                                    condition_observed=observed[selected],
+                                )
+                                if subset_loss is not None:
+                                    key = f"{label}_conditional_loss"
+                                    val_stats[key] = val_stats.get(key, 0.0) + float(
+                                        subset_loss.item()
+                                    )
+                                    val_stats[f"{label}_conditional_batches"] = (
+                                        val_stats.get(
+                                            f"{label}_conditional_batches", 0.0
+                                        )
+                                        + 1.0
+                                    )
+                        uncond_loss, uncond_stats = self._loss_for_batch(
+                            model,
+                            clean,
+                            encoder,
+                            validation=True,
+                            condition_values=values,
+                            condition_observed=observed,
+                            force_unconditional=True,
+                        )
+                        if uncond_loss is not None:
+                            val_stats["unconditional_denoising_loss"] = val_stats.get(
+                                "unconditional_denoising_loss", 0.0
+                            ) + float(uncond_loss.item())
 
             train_loss = train_loss_total / max(train_batches, 1)
             val_loss = val_loss_total / max(val_batches, 1)
+            if condition_rows is not None:
+                val_stats["conditional_denoising_loss"] = val_loss
+                val_stats["unconditional_denoising_loss"] = val_stats.get(
+                    "unconditional_denoising_loss", 0.0
+                ) / max(val_batches, 1)
+                for provenance in ("measured", "teacher"):
+                    batches = val_stats.get(f"{provenance}_conditional_batches", 0.0)
+                    val_stats[f"{provenance}_conditional_loss"] = val_stats.get(
+                        f"{provenance}_conditional_loss", 0.0
+                    ) / max(batches, 1.0)
             masked_frac = train_stats.get("masked_tokens", 0.0) / max(
                 train_stats.get("valid_tokens", 0.0), 1.0
             )
@@ -400,6 +634,10 @@ class TrainingPipeline:
                     "epoch": float(epoch + 1),
                     "train_loss": train_loss,
                     "val_loss": val_loss,
+                    "condition_drop_fraction": train_stats.get(
+                        "condition_drop_fraction", 0.0
+                    )
+                    / max(len(train_loader), 1),
                 }
             )
             logger.info(
@@ -487,8 +725,59 @@ class TrainingPipeline:
         checkpoint_dir = self.repo.resolve(self.config.checkpoint_dir)
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-        model.save(checkpoint_dir / "model.pt")
-        self.config.to_json_file(checkpoint_dir / "config.json")
+        condition_contract = {
+            "training_mode": self.config.training_mode,
+            "condition_names": list(CONDITION_NAMES),
+            "condition_normalization": {
+                **condition_normalization,
+            },
+            "semantic_definition": condition_semantics,
+            "condition_table_sha256": condition_manifest.get("table_sha256"),
+            "condition_manifest_sha256": sha256_file(
+                self.repo.resolve(self.config.condition_manifest_path)
+            )
+            if condition_rows is not None
+            else None,
+            "property_model_checkpoint_sha256": condition_manifest.get(
+                "property_checkpoint_sha256"
+            ),
+            "measured_count": sum(
+                p == "measured"
+                for row in (condition_rows or [])
+                for p in row["provenance"].values()
+            ),
+            "pseudo_label_count": sum(
+                p == "teacher"
+                for row in (condition_rows or [])
+                for p in row["provenance"].values()
+            ),
+            "condition_dropout": self.config.condition_dropout,
+            "training_split_sha256": split_hash,
+        }
+        model.save(
+            checkpoint_dir / "model.pt", encoder=encoder, contract=condition_contract
+        )
+        self.repo.write_json_atomic(
+            checkpoint_dir / "config.json",
+            {
+                **self.config.model_dump(mode="json"),
+                "condition_schema": list(CONDITION_NAMES),
+                "condition_normalization": condition_contract[
+                    "condition_normalization"
+                ],
+                "condition_semantics": condition_contract["semantic_definition"],
+                "condition_table_sha256": condition_contract["condition_table_sha256"],
+                "condition_manifest_sha256": condition_contract[
+                    "condition_manifest_sha256"
+                ],
+                "property_model_checkpoint_sha256": condition_contract[
+                    "property_model_checkpoint_sha256"
+                ],
+                "measured_count": condition_contract["measured_count"],
+                "pseudo_label_count": condition_contract["pseudo_label_count"],
+                "training_split_sha256": condition_contract["training_split_sha256"],
+            },
+        )
         self.repo.write_json_atomic(
             checkpoint_dir / "tokenizer.json", encoder.to_metadata()
         )
@@ -497,6 +786,19 @@ class TrainingPipeline:
             {
                 "checkpoint_version": 2,
                 "canvas_semantics": "residues_plus_eos",
+                "conditioning_contract": condition_contract,
+                "validation_condition_metrics": {
+                    k: v
+                    for k, v in val_stats.items()
+                    if k
+                    in {
+                        "conditional_denoising_loss",
+                        "unconditional_denoising_loss",
+                        "condition_drop_fraction",
+                        "measured_conditional_loss",
+                        "teacher_conditional_loss",
+                    }
+                },
                 "best_val_loss": best_val_loss,
                 "history": history,
                 "feature_stats": asdict(feature_stats),
@@ -537,6 +839,38 @@ class TrainingPipeline:
                 "canvas_semantics": "residues_plus_eos",
             },
         )
+        production_manifest = self.repo.resolve(
+            Path("data/training/dataset_manifest.json")
+        )
+        existing_manifest = {}
+        if production_manifest.is_file():
+            existing_manifest = json.loads(
+                production_manifest.read_text(encoding="utf-8")
+            )
+        existing_manifest.update(
+            {
+                "ctmc_training_fasta": str(
+                    self.repo.resolve(self.config.training_fasta_path)
+                ),
+                "ctmc_training_fasta_sha256": sha256_file(
+                    self.repo.resolve(self.config.training_fasta_path)
+                ),
+                "ctmc_cluster_split_manifest": str(
+                    self.repo.resolve(self.config.cluster_split_manifest_path)
+                )
+                if self.config.cluster_split_manifest_path.exists()
+                else None,
+                "ctmc_cluster_split_sha256": sha256_file(
+                    self.repo.resolve(self.config.cluster_split_manifest_path)
+                )
+                if self.config.cluster_split_manifest_path.exists()
+                else None,
+                "ctmc_train_count": len(train_sequences),
+                "ctmc_validation_count": len(val_sequences),
+                "ctmc_checkpoint_format_version": 2,
+            }
+        )
+        self.repo.write_json_atomic(production_manifest, existing_manifest)
         discriminator.save(checkpoint_dir / "discriminator.json")
         tracker.log({"val/best_loss": best_val_loss})
         tracker.finish()

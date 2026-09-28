@@ -1,10 +1,15 @@
 import pytest
 
-from amp_ctmc_2027.compliance import validate_submission
+from amp_ctmc_2027.compliance import load_official_identity, validate_submission
 
 
 def identity(candidate, reference):
     return 0.8 if candidate == "ACDEFGHI" and reference == "KLMNPQRS" else 0.2
+
+
+def test_missing_official_identity_validator_fails_closed():
+    with pytest.raises(RuntimeError, match="not configured"):
+        load_official_identity(None)
 
 
 def validate(library, top, refs=(), threshold=0.8):

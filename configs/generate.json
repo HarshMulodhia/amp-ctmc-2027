@@ -1,9 +1,0 @@
-{
-  "seed": 42,
-  "n_sequences": 50000,
-  "top_k": 100,
-  "checkpoint_dir": "checkpoint",
-  "generate_dir": "generate_broad_spectrum",
-  "wandb_enabled": false,
-  "wandb_mode": "disabled"
-}
