@@ -327,14 +327,32 @@ def cluster_fasta(
 
 # --- Sequence Cleaning & Observation Normalization ---
 
-def clean_sequence(raw: str) -> tuple[str | None, str | None]:
-    cleaned = raw.strip().upper()
+def _parse_bool(val: object, default: bool = True) -> bool:
+    """Parse string or mixed-type boolean flags robustly."""
+    if val is None:
+        return default
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, (int, float)):
+        return bool(val)
+    if isinstance(val, str):
+        s = val.strip().lower()
+        if s in ("false", "0", "no", "off", "f"):
+            return False
+        if s in ("true", "1", "yes", "on", "t"):
+            return True
+    return bool(val)
+
+
+def clean_sequence(seq: str) -> tuple[str | None, str | None]:
+    """Clean and canonicalize amino acid sequence."""
+    if not seq or not isinstance(seq, str):
+        return None, "empty_sequence"
+    cleaned = seq.strip().upper()
     if not cleaned:
-        return None, "empty"
-    if any(char not in CANONICAL for char in cleaned):
-        return None, "noncanonical_characters"
-    if not 8 <= len(cleaned) <= 50:
-        return None, "invalid_length"
+        return None, "empty_sequence"
+    if not set(cleaned).issubset(CANONICAL):
+        return None, "noncanonical_residue"
     return cleaned, None
 
 
@@ -358,11 +376,21 @@ def clean_observations(
             rejected.append({"row_index": idx, "sequence": raw_sequence, "reason": reason})
             continue
         assert canonical is not None
+
         if canonical in forbidden:
             rejected.append(
-                {"row_index": idx, "sequence": canonical, "reason": "compliance_reference_match"}
+                {"row_index": idx, "sequence": canonical, "reason": "compliance_reference_overlap"}
             )
             continue
+
+        # Reject non-linear sequence records
+        is_linear = _parse_bool(row.get("is_linear"), default=True)
+        if not is_linear:
+            rejected.append(
+                {"row_index": idx, "sequence": canonical, "reason": "modified_or_non_linear"}
+            )
+            continue
+
         mod_desc = (
             str(row.get("terminal_modification", ""))
             + " "
@@ -370,16 +398,20 @@ def clean_observations(
         ).lower()
         if any(term in mod_desc for term in MODIFICATION_TERMS):
             rejected.append(
-                {"row_index": idx, "sequence": canonical, "reason": "modified_peptide"}
+                {"row_index": idx, "sequence": canonical, "reason": "modified_or_non_linear"}
             )
             continue
+
         if canonical in seen_sequences:
             duplicates += 1
         seen_sequences.add(canonical)
+
         is_amp = row.get("is_amp")
         if is_amp is not None and str(is_amp).strip():
             label_map[canonical].add(float(is_amp))
+
         seq_sha = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
         retained.append(
             AMPObservation(
                 sequence=canonical,
@@ -414,19 +446,22 @@ def clean_observations(
                 other_modification=str(row.get("other_modification"))
                 if row.get("other_modification") is not None
                 else None,
-                is_linear=bool(row.get("is_linear", True)),
+                is_linear=True,
                 label_provenance=row.get("label_provenance", "measured"),  # type: ignore[arg-type]
             )
         )
+
     for sequence, labels in label_map.items():
         if len(labels) > 1:
             conflicts.append(
                 {
                     "sequence": sequence,
                     "labels": sorted(labels),
+                    "kind": "contradictory_amp_labels",
                     "reason": "contradictory_amp_labels",
                 }
             )
+
     return CleaningResult(
         observations=tuple(retained),
         rejected=tuple(rejected),

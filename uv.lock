@@ -32,10 +32,12 @@ dependencies = [
     { name = "biopython" },
     { name = "levenshtein" },
     { name = "numpy" },
+    { name = "pyarrow" },
     { name = "pydantic" },
     { name = "rapidfuzz" },
     { name = "torch" },
     { name = "tqdm" },
+    { name = "transformers" },
     { name = "xgboost" },
 ]
 
@@ -63,10 +65,12 @@ requires-dist = [
     { name = "biopython", specifier = "==1.88" },
     { name = "levenshtein", specifier = "==0.27.3" },
     { name = "numpy", specifier = "==2.4.6" },
+    { name = "pyarrow", specifier = ">=25.0.1" },
     { name = "pydantic", specifier = "==2.13.5" },
     { name = "rapidfuzz", specifier = "==3.14.6" },
     { name = "torch", specifier = "==2.14.0" },
     { name = "tqdm", specifier = "==4.70.0" },
+    { name = "transformers", specifier = ">=5.17.0" },
     { name = "xgboost", specifier = "==3.2.0" },
 ]
 
