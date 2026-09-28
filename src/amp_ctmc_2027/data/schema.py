@@ -1,4 +1,5 @@
 """Canonical observation schema for AMP sequences and assay labels."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -19,8 +20,10 @@ class AMPObservation:
     mic_value: float | None = None
     mic_unit_original: str | None = None
     mic_uM: float | None = None
+    mic_upper_uM: float | None = None
     mic_censor: Literal["none", "left", "right", "interval"] | None = None
     hc50_uM: float | None = None
+    hc50_upper_uM: float | None = None
     hc50_censor: Literal["none", "left", "right", "interval"] | None = None
     terminal_modification: str | None = None
     other_modification: str | None = None

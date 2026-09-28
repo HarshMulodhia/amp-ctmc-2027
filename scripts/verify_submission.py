@@ -1,9 +1,9 @@
-from pathlib import Path
-import subprocess
 import argparse
 import os
-import sys
 import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 import Levenshtein
 
@@ -136,7 +136,10 @@ def _verify_sequences(fasta_path: Path) -> set[str]:
 
     return seen
 
-def _veritfy_max_simularity(sequences: set[str], references: set[str], threshold: float = 0.8) -> None:
+
+def _veritfy_max_simularity(
+    sequences: set[str], references: set[str], threshold: float = 0.8
+) -> None:
     for seq in sequences:
         for ref in references:
             if Levenshtein.ratio(seq, ref) > threshold:
@@ -146,7 +149,9 @@ def _veritfy_max_simularity(sequences: set[str], references: set[str], threshold
                 )
 
 
-def _verify_no_overlap(full_sequences: set[str], antibacterial_sequences: set[str]) -> None:
+def _verify_no_overlap(
+    full_sequences: set[str], antibacterial_sequences: set[str]
+) -> None:
     overlap = full_sequences & antibacterial_sequences
     if overlap:
         raise ValueError(
@@ -215,7 +220,11 @@ def verify_setup(
         _, top_sequences = _read_fasta(top_fasta)
         _veritfy_max_simularity(set(top_sequences), antibacterial_set)
 
-    print("[8] Checking reproducibility" if antibacterial_fasta is not None else "[6] Checking reproducibility")
+    print(
+        "[8] Checking reproducibility"
+        if antibacterial_fasta is not None
+        else "[6] Checking reproducibility"
+    )
     library_data = library_fasta.read_bytes()
     top_data = top_fasta.read_bytes()
     _uv_run(dir)
@@ -225,9 +234,7 @@ def verify_setup(
             "Reproducibility check failed: two runs with identical inputs produced different output."
         )
     if top_fasta.read_bytes() != top_data:
-        raise ValueError(
-            "Reproducibility check failed: top list differs between runs."
-        )
+        raise ValueError("Reproducibility check failed: top list differs between runs.")
 
     print("\nAll checks passed. Submission is valid!")
 
@@ -279,6 +286,6 @@ if __name__ == "__main__":
             extras=args.extras,
             antibacterial_fasta=args.antibacterial_fasta,
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - CLI boundary reports any validator failure
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)

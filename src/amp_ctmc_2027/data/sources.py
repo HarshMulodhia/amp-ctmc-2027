@@ -1,4 +1,5 @@
 """Versioned source-catalog validation and idempotent downloads."""
+
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +15,9 @@ def download_verified(url: str, destination: Path, expected_sha256: str) -> str:
     if destination.exists():
         actual = hashlib.sha256(destination.read_bytes()).hexdigest()
         if actual != expected_sha256:
-            raise ValueError(f"Existing file {destination} has SHA-256 {actual}, expected {expected_sha256}; refusing to replace it")
+            raise ValueError(
+                f"Existing file {destination} has SHA-256 {actual}, expected {expected_sha256}; refusing to replace it"
+            )
         return actual
     tmp = destination.with_suffix(destination.suffix + ".download")
     digest = hashlib.sha256()
@@ -25,7 +28,9 @@ def download_verified(url: str, destination: Path, expected_sha256: str) -> str:
                 output.write(block)
         actual = digest.hexdigest()
         if actual != expected_sha256:
-            raise ValueError(f"Downloaded checksum mismatch for {url}: got {actual}, expected {expected_sha256}")
+            raise ValueError(
+                f"Downloaded checksum mismatch for {url}: got {actual}, expected {expected_sha256}"
+            )
         tmp.replace(destination)
         return actual
     finally:

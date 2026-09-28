@@ -1,4 +1,5 @@
 """Hashable dataset manifest helpers."""
+
 from __future__ import annotations
 
 import hashlib
@@ -17,7 +18,9 @@ def sha256_file(path: Path) -> str:
 
 def git_commit() -> str | None:
     try:
-        return subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+        ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
 
@@ -26,5 +29,7 @@ def write_manifest(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {**data, "code_commit": data.get("code_commit", git_commit())}
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     tmp.replace(path)

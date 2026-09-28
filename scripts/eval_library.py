@@ -6,13 +6,13 @@ Run from the repo root:
     uv run python eval_library.py
     uv run python eval_library.py --library generate/library.fasta
 """
+
 from __future__ import annotations
 
 import argparse
 import inspect
 import json
 import sys
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -23,9 +23,18 @@ from amp_ctmc_2027.config import AMPConfig
 from amp_ctmc_2027.core import CTMCDenoiser
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder
 from amp_ctmc_2027.data.fasta_io import FastaRepository
-from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, FeatureStats, PeptideFeatureExtractor
-from amp_ctmc_2027.infra import resolve_device, ConstraintValidator
-from amp_ctmc_2027.objectives import DiscriminatorScorer, NoveltyScorer, RealismScorer, ScoringContext
+from amp_ctmc_2027.discriminator import (
+    DiscriminatorEnsemble,
+    FeatureStats,
+    PeptideFeatureExtractor,
+)
+from amp_ctmc_2027.infra import ConstraintValidator, resolve_device
+from amp_ctmc_2027.objectives import (
+    DiscriminatorScorer,
+    MaskedPseudoLikelihoodScorer,
+    NoveltyScorer,
+    ScoringContext,
+)
 
 
 def _summarize(name: str, values: np.ndarray) -> str:
@@ -48,7 +57,9 @@ def _length_histogram(lengths: np.ndarray) -> str:
     return "  ".join(parts)
 
 
-def _load_model(ckpt: Path, cfg: AMPConfig, encoder: AMPCanvasEncoder, device) -> CTMCDenoiser:
+def _load_model(
+    ckpt: Path, cfg: AMPConfig, encoder: AMPCanvasEncoder, device
+) -> CTMCDenoiser:
     kwargs = {
         "path": ckpt / "model.pt",
         "config": cfg,
@@ -62,7 +73,11 @@ def _load_model(ckpt: Path, cfg: AMPConfig, encoder: AMPCanvasEncoder, device) -
             kwargs["path"],
             config=kwargs["config"],
             vocab_size=kwargs["vocab_size"],
-            **({"pad_idx": encoder.pad_idx} if "pad_idx" in inspect.signature(CTMCDenoiser.load).parameters else {}),
+            **(
+                {"pad_idx": encoder.pad_idx}
+                if "pad_idx" in inspect.signature(CTMCDenoiser.load).parameters
+                else {}
+            ),
             device=kwargs["device"],
         )
         return model
@@ -79,7 +94,9 @@ def _load_model(ckpt: Path, cfg: AMPConfig, encoder: AMPCanvasEncoder, device) -
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate generated AMP library")
-    parser.add_argument("--library", type=Path, default=Path("generate_broad_spectrum/library.fasta"))
+    parser.add_argument(
+        "--library", type=Path, default=Path("generate_broad_spectrum/library.fasta")
+    )
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("checkpoint"))
     parser.add_argument("--pairwise-subset", type=int, default=400)
     parser.add_argument("--train-score-sample", type=int, default=2000)
@@ -103,7 +120,9 @@ def main() -> int:
     print(f"checkpoint: {ckpt}")
     print(f"n_library={len(lib)}  n_train={len(train)}  n_forbidden={len(forbidden)}")
 
-    validator = ConstraintValidator(cfg.vocab, cfg.min_length, cfg.max_length, forbidden)
+    validator = ConstraintValidator(
+        cfg.vocab, cfg.min_length, cfg.max_length, forbidden
+    )
     try:
         validator.assert_library(lib, expected_size=len(lib))
         print("HARD CONSTRAINTS: PASS")
@@ -111,13 +130,17 @@ def main() -> int:
         print(f"HARD CONSTRAINTS: FAIL ({exc})")
         return 1
 
-    encoder = AMPCanvasEncoder.from_metadata(json.loads((ckpt / "tokenizer.json").read_text()))
+    encoder = AMPCanvasEncoder.from_metadata(
+        json.loads((ckpt / "tokenizer.json").read_text())
+    )
     device = resolve_device(cfg)
     model = _load_model(ckpt, cfg, encoder, device)
     model.eval()
 
     extractor = PeptideFeatureExtractor(alphabet=cfg.vocab)
-    stats_payload = json.loads((ckpt / "training_stats.json").read_text())["feature_stats"]
+    stats_payload = json.loads((ckpt / "training_stats.json").read_text())[
+        "feature_stats"
+    ]
     feature_stats = FeatureStats(
         means={k: float(v) for k, v in stats_payload["means"].items()},
         stds={k: float(v) for k, v in stats_payload["stds"].items()},
@@ -125,13 +148,15 @@ def main() -> int:
         q95={k: float(v) for k, v in stats_payload["q95"].items()},
     )
     disc = DiscriminatorEnsemble.load(ckpt / "discriminator.json", extractor=extractor)
-    ctx = ScoringContext(train, list(forbidden), extractor, feature_stats, disc, model, encoder)
+    ctx = ScoringContext(
+        train, list(forbidden), extractor, feature_stats, disc, model, encoder
+    )
 
     train_score_n = min(args.train_score_sample, len(train))
     p_lib = DiscriminatorScorer().score(lib, ctx)
     p_train = DiscriminatorScorer().score(train[:train_score_n], ctx)
     novelty = NoveltyScorer().score(lib, ctx)
-    realism = RealismScorer().score(lib, ctx)
+    pseudo_likelihood = MaskedPseudoLikelihoodScorer().score(lib, ctx)
     feats = extractor.extract_batch(lib)
     feats_tr = extractor.extract_batch(train[:train_score_n])
 
@@ -143,7 +168,9 @@ def main() -> int:
 
     subset_n = min(args.pairwise_subset, len(lib))
     subset = lib[:subset_n]
-    pair = process.cdist(subset, subset, scorer=Levenshtein.normalized_similarity, dtype=np.float32)
+    pair = process.cdist(
+        subset, subset, scorer=Levenshtein.normalized_similarity, dtype=np.float32
+    )
     np.fill_diagonal(pair, 0.0)
     mean_id = float(pair.mean()) if subset_n > 1 else 0.0
     frac_near = float((pair > 0.70).mean()) if subset_n > 1 else 0.0
@@ -154,12 +181,18 @@ def main() -> int:
     print(_summarize("disc P(AMP) library", p_lib))
     print(_summarize("disc P(AMP) train", p_train))
     print(_summarize("novelty vs train", novelty))
-    print(_summarize("realism", realism))
+    print(_summarize("masked pseudo-likelihood", pseudo_likelihood))
     print(f"exact train copies   {sum(seq in train_set for seq in lib)}")
     print(f"exact forbidden      {sum(seq in forbidden for seq in lib)}")
 
     print("\n=== FEATURES vs TRAIN ===")
-    feature_names = ["length", "net_charge", "hydrophobic_fraction", "composition_entropy", "aromatic_fraction"]
+    feature_names = [
+        "length",
+        "net_charge",
+        "hydrophobic_fraction",
+        "composition_entropy",
+        "aromatic_fraction",
+    ]
     for idx, name in enumerate(feature_names):
         print(
             f"{name:22s} lib={feats[:, idx].mean():.3f}±{feats[:, idx].std():.3f}  "
@@ -205,11 +238,6 @@ def main() -> int:
         flags.append("TRAIN COPIES: library is too close to training sequences.")
     if mean_id > 0.45 or frac_near > 0.05:
         flags.append("MODE COLLAPSE: sequences are near-duplicates of each other.")
-    if float(realism.mean()) < 0.45 and frac_long > 0.5:
-        flags.append(
-            "LOW REALISM: denoiser is not confident on these canvases. "
-            "Consistent with max-length completions rather than AMP-like peptides."
-        )
     if not flags:
         flags.append(
             "HEALTHY ENOUGH: constraints pass, diversity looks fine, length matches training. "

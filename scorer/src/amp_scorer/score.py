@@ -17,7 +17,13 @@ def _sigmoid(x: float) -> float:
 def _features(sequence: str) -> dict[str, float]:
     seq = sequence.strip().upper()
     length = max(len(seq), 1)
-    charge = (seq.count("K") + seq.count("R") + 0.1 * seq.count("H") - seq.count("D") - seq.count("E")) / length
+    charge = (
+        seq.count("K")
+        + seq.count("R")
+        + 0.1 * seq.count("H")
+        - seq.count("D")
+        - seq.count("E")
+    ) / length
     hydrophobic = sum(seq.count(aa) for aa in "AVILMFWY") / length
     aromatic = sum(seq.count(aa) for aa in "FWY") / length
     composition = [seq.count(aa) / length for aa in "ACDEFGHIKLMNPQRSTVWY"]
@@ -35,7 +41,9 @@ def _features(sequence: str) -> dict[str, float]:
 
 
 def _load_coefficients() -> dict[str, float]:
-    coeff_path = Path(__file__).resolve().parents[2] / "models" / "pretrained_coefficients.json"
+    coeff_path = (
+        Path(__file__).resolve().parents[2] / "models" / "pretrained_coefficients.json"
+    )
     return json.loads(coeff_path.read_text(encoding="utf-8"))
 
 

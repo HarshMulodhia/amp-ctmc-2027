@@ -1,46 +1,62 @@
 """AMP CTMC generator package."""
 
 from amp_ctmc_2027.config import AMPConfig, set_global_determinism
-from amp_ctmc_2027.core import CTMCDenoiser, NoiseSchedule, ReverseGenerationConfig, SinSquaredSchedule, TauLeapingSampler
-from amp_ctmc_2027.discriminator import AMPDiscriminator, FeatureStats, PeptideFeatureExtractor
+from amp_ctmc_2027.core import (
+    ConditionVector,
+    CTMCDenoiser,
+    NoiseSchedule,
+    ReverseGenerationConfig,
+    SinSquaredSchedule,
+    TauLeapingSampler,
+    initialize_amino_acid_embeddings,
+)
+from amp_ctmc_2027.discriminator import (
+    AMPDiscriminator,
+    FeatureStats,
+    PeptideFeatureExtractor,
+)
 from amp_ctmc_2027.external_scorer import VendoredScorerClient
+from amp_ctmc_2027.infra import ConstraintValidator
 from amp_ctmc_2027.objectives import (
     ActivityHemolysisScorer,
     ConformityScorer,
     DiscriminatorScorer,
     ESM2PseudoPerplexityScorer,
+    GreedyMMRSelector,
+    MaskedPseudoLikelihoodScorer,
     MultiObjectiveScorer,
     NoveltyScorer,
     QualityScorer,
-    RealismScorer,
     ScoreComponent,
+    ScoreTable,
     ScoringContext,
-    GreedyMMRSelector,   
 )
-from amp_ctmc_2027.infra import ConstraintValidator
 
 __all__ = [
     "AMPConfig",
-    "set_global_determinism",
-    "CTMCDenoiser",
-    "NoiseSchedule",
-    "ReverseGenerationConfig",
-    "SinSquaredSchedule",
-    "TauLeapingSampler",
     "AMPDiscriminator",
-    "FeatureStats",
-    "PeptideFeatureExtractor",
-    "VendoredScorerClient",
     "ActivityHemolysisScorer",
+    "CTMCDenoiser",
+    "ConditionVector",
     "ConformityScorer",
+    "ConstraintValidator",
     "DiscriminatorScorer",
     "ESM2PseudoPerplexityScorer",
-    "MultiObjectiveScorer",
-    "NoveltyScorer",
-    "QualityScorer",
-    "RealismScorer",
-    "ScoreComponent",
-    "ScoringContext",
+    "FeatureStats",
     "GreedyMMRSelector",
-    "ConstraintValidator",
+    "MaskedPseudoLikelihoodScorer",
+    "MultiObjectiveScorer",
+    "NoiseSchedule",
+    "NoveltyScorer",
+    "PeptideFeatureExtractor",
+    "QualityScorer",
+    "ReverseGenerationConfig",
+    "ScoreComponent",
+    "ScoreTable",
+    "ScoringContext",
+    "SinSquaredSchedule",
+    "TauLeapingSampler",
+    "VendoredScorerClient",
+    "initialize_amino_acid_embeddings",
+    "set_global_determinism",
 ]

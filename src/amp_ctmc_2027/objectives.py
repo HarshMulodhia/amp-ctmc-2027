@@ -1,10 +1,12 @@
 """Objectives: scoring components, multi-objective optimization, and selection."""
+
 from __future__ import annotations
 
 import abc
 import itertools
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Literal
+from typing import Literal
 
 import numpy as np
 import torch
@@ -13,13 +15,18 @@ from rapidfuzz.distance import Levenshtein
 
 from amp_ctmc_2027.core import CTMCDenoiser
 from amp_ctmc_2027.data.dataset import AMPCanvasEncoder
-from amp_ctmc_2027.discriminator import DiscriminatorEnsemble, FeatureStats, PeptideFeatureExtractor
+from amp_ctmc_2027.discriminator import (
+    DiscriminatorEnsemble,
+    FeatureStats,
+    PeptideFeatureExtractor,
+)
 from amp_ctmc_2027.external_scorer import VendoredScorerClient
 
 
 @dataclass
 class ScoreTable:
     """Auditable raw, rank-normalized scores with component metadata."""
+
     sequences: list[str]
     columns: dict[str, np.ndarray] = field(default_factory=dict)
     metadata: dict[str, dict] = field(default_factory=dict)
@@ -27,6 +34,7 @@ class ScoreTable:
     def write_csv(self, path) -> None:
         import csv
         from pathlib import Path
+
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(path.suffix + ".tmp")
@@ -120,8 +128,20 @@ class ConformityScorer(ScoreComponent):
     def score(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
         feats = context.feature_extractor.extract_batch(candidates)
         idxs = [0, 1, 2, 3, 4]
-        means = np.array([context.feature_stats.means[context.feature_extractor.feature_names[idx]] for idx in idxs])
-        stds = np.array([context.feature_stats.stds[context.feature_extractor.feature_names[idx]] for idx in idxs])
+        means = np.array(
+            [
+                context.feature_stats.means[
+                    context.feature_extractor.feature_names[idx]
+                ]
+                for idx in idxs
+            ]
+        )
+        stds = np.array(
+            [
+                context.feature_stats.stds[context.feature_extractor.feature_names[idx]]
+                for idx in idxs
+            ]
+        )
         z = (feats[:, idxs] - means[None, :]) / stds[None, :]
         return np.exp(-0.5 * np.mean(z**2, axis=1)).astype(np.float32)
 
@@ -148,6 +168,7 @@ class QualityScorer(ScoreComponent):
 
 class MaskedPseudoLikelihoodScorer(ScoreComponent):
     """Observed-token masked log likelihood from the lightweight student."""
+
     name = "masked_pseudo_likelihood"
     cost_tier = "expensive"
     raw_units = "mean_log_probability_per_residue"
@@ -157,7 +178,12 @@ class MaskedPseudoLikelihoodScorer(ScoreComponent):
         device = next(context.model.parameters()).device
         scores: list[float] = []
         for start in range(0, len(candidates), self.batch_size):
-            encoded = torch.stack([context.encoder.encode(s) for s in candidates[start:start+self.batch_size]]).to(device)
+            encoded = torch.stack(
+                [
+                    context.encoder.encode(s)
+                    for s in candidates[start : start + self.batch_size]
+                ]
+            ).to(device)
             batch_scores = torch.zeros(encoded.shape[0], device=device)
             count = torch.zeros_like(batch_scores)
             residue_mask = encoded.lt(len(context.encoder.vocab))
@@ -171,7 +197,9 @@ class MaskedPseudoLikelihoodScorer(ScoreComponent):
                 with torch.inference_mode():
                     logp = torch.log_softmax(context.model(masked, t), dim=-1)
                 target = encoded[selected, pos]
-                batch_scores[selected] += logp[torch.arange(target.numel(), device=device), pos, target]
+                batch_scores[selected] += logp[
+                    torch.arange(target.numel(), device=device), pos, target
+                ]
                 count[selected] += 1
             scores.extend((batch_scores / count.clamp_min(1)).cpu().tolist())
         return np.asarray(scores, dtype=np.float32)
@@ -242,12 +270,23 @@ class MultiObjectiveScorer:
         if not candidates:
             return np.array([], dtype=np.float32)
 
-        active = [c for c in self.components if float(self.weights.get(c.name, 0.0)) > 0.0]
+        active = [
+            c for c in self.components if float(self.weights.get(c.name, 0.0)) > 0.0
+        ]
         if not active:
-            raise ValueError("At least one enabled score component must have a positive weight")
+            raise ValueError(
+                "At least one enabled score component must have a positive weight"
+            )
         for component in active:
-            if component.failure_policy == "raise" and component.required_artifacts and context.external_scorer is None and any("scorer" in p for p in component.required_artifacts):
-                raise RuntimeError(f"Score component {component.name} requires artifacts {component.required_artifacts}")
+            if (
+                component.failure_policy == "raise"
+                and component.required_artifacts
+                and context.external_scorer is None
+                and any("scorer" in p for p in component.required_artifacts)
+            ):
+                raise RuntimeError(
+                    f"Score component {component.name} requires artifacts {component.required_artifacts}"
+                )
 
         if self.combine_mode == "geometric":
             return self._score_geometric(candidates, context)
@@ -261,26 +300,40 @@ class MultiObjectiveScorer:
             weight = float(self.weights.get(component.name, 0.0))
             if weight == 0.0:
                 table.metadata[component.name] = {
-                    "status": "skipped_zero_weight", "weight": 0.0, "model_version": None,
-                    "uncertainty": None, "calibration": None, "failure_state": None,
+                    "status": "skipped_zero_weight",
+                    "weight": 0.0,
+                    "model_version": None,
+                    "uncertainty": None,
+                    "calibration": None,
+                    "failure_state": None,
                 }
                 continue
             raw = np.asarray(component.score(candidates, context), dtype=np.float32)
             if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
-                raise ValueError(f"Score component {component.name} returned invalid values")
+                raise ValueError(
+                    f"Score component {component.name} returned invalid values"
+                )
             table.columns[f"{component.name}.raw"] = raw
             oriented = -raw if component.direction == "minimize" else raw
             table.columns[f"{component.name}.rank"] = self._rank_normalize(oriented)
             table.metadata[component.name] = {
-                "status": "ok", "weight": weight, "direction": component.direction,
-                "cost_tier": component.cost_tier, "raw_units": component.raw_units,
-                "required_artifacts": list(component.required_artifacts), "failure_policy": component.failure_policy,
-                "model_version": "not_recorded", "uncertainty": "unavailable", "calibration": "not_fitted",
+                "status": "ok",
+                "weight": weight,
+                "direction": component.direction,
+                "cost_tier": component.cost_tier,
+                "raw_units": component.raw_units,
+                "required_artifacts": list(component.required_artifacts),
+                "failure_policy": component.failure_policy,
+                "model_version": "not_recorded",
+                "uncertainty": "unavailable",
+                "calibration": "not_fitted",
                 "failure_state": None,
             }
         return table
 
-    def _score_geometric(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
+    def _score_geometric(
+        self, candidates: list[str], context: ScoringContext
+    ) -> np.ndarray:
         """Compute weighted geometric mean of component scores."""
         eps = 1e-6
         log_sum = None
@@ -290,7 +343,9 @@ class MultiObjectiveScorer:
                 continue
             raw = component.score(candidates, context).astype(np.float32)
             if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
-                raise ValueError(f"Score component {component.name} returned invalid values")
+                raise ValueError(
+                    f"Score component {component.name} returned invalid values"
+                )
             if component.direction == "minimize":
                 raw = -raw
             norm = self._rank_normalize(raw)
@@ -299,7 +354,9 @@ class MultiObjectiveScorer:
             log_sum = term if log_sum is None else log_sum + term
         return np.exp(log_sum).astype(np.float32)
 
-    def _score_arithmetic(self, candidates: list[str], context: ScoringContext) -> np.ndarray:
+    def _score_arithmetic(
+        self, candidates: list[str], context: ScoringContext
+    ) -> np.ndarray:
         """Compute weighted arithmetic mean of component scores."""
         total = np.zeros(len(candidates), dtype=np.float32)
         for component in self.components:
@@ -308,7 +365,9 @@ class MultiObjectiveScorer:
                 continue
             raw = component.score(candidates, context).astype(np.float32)
             if raw.shape != (len(candidates),) or not np.isfinite(raw).all():
-                raise ValueError(f"Score component {component.name} returned invalid values")
+                raise ValueError(
+                    f"Score component {component.name} returned invalid values"
+                )
             if component.direction == "minimize":
                 raw = -raw
             norm = self._rank_normalize(raw)
@@ -322,17 +381,23 @@ class GreedyMMRSelector:
     def __init__(self, lambda_diversity: float) -> None:
         self.lambda_diversity = float(lambda_diversity)
 
-    def select(self, candidates: list[str], scores: np.ndarray, target: int) -> list[str]:
+    def select(
+        self, candidates: list[str], scores: np.ndarray, target: int
+    ) -> list[str]:
         """Select target candidates with quality-diversity trade-off via MMR."""
         if len(candidates) != len(scores):
             raise ValueError("candidates and scores must have same length")
         if target <= 0:
             return []
         if len(candidates) <= target:
-            ordered = sorted(zip(candidates, scores.tolist()), key=lambda x: (-x[1], x[0]))
+            ordered = sorted(
+                zip(candidates, scores.tolist()), key=lambda x: (-x[1], x[0])
+            )
             return [seq for seq, _ in ordered[:target]]
 
-        ordered_idx = sorted(range(len(candidates)), key=lambda i: (-float(scores[i]), candidates[i]))
+        ordered_idx = sorted(
+            range(len(candidates)), key=lambda i: (-float(scores[i]), candidates[i])
+        )
         cands = [candidates[i] for i in ordered_idx]
         score_arr = scores[np.array(ordered_idx)]
 
@@ -362,7 +427,9 @@ class GreedyMMRSelector:
                 dtype=np.float32,
             )[0]
             similarities = 1.0 - distances
-            max_similarity[remaining] = np.maximum(max_similarity[remaining], similarities)
+            max_similarity[remaining] = np.maximum(
+                max_similarity[remaining], similarities
+            )
 
         return selected
 
@@ -399,9 +466,15 @@ def grid_search_weights(
         weights = dict(zip(names, combo))
         composite = combine_fn(component_scores, weights)
 
-        if "novelty" in component_scores and component_scores["novelty"].mean() < novelty_floor:
+        if (
+            "novelty" in component_scores
+            and component_scores["novelty"].mean() < novelty_floor
+        ):
             continue
-        if pairwise_identity_fn is not None and pairwise_identity_fn() > identity_ceiling:
+        if (
+            pairwise_identity_fn is not None
+            and pairwise_identity_fn() > identity_ceiling
+        ):
             continue
 
         mean_score = float(composite.mean())
