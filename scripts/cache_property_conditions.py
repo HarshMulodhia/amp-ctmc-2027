@@ -124,10 +124,9 @@ def main() -> None:
                 if seq in measured:
                     raise ValueError(f"Duplicate measured condition row: {seq}")
                 measured[seq] = row
-        if set(measured) - set(sequences):
-            raise ValueError(
-                "Measured condition table contains sequences outside the requested FASTA"
-            )
+        sequence_set = set(sequences)
+        measured = {seq: row for seq, row in measured.items() if seq in sequence_set}
+        
     rows = []
     for i, seq in enumerate(sequences):
         mic = {
