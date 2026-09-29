@@ -1,0 +1,68 @@
+{
+  "audit_sha256": "3d38b7b4a33406aa59176d1b7095303a3f727239bc0e61fb30736d2a848b6163",
+  "condition_names": [
+    "amp_probability",
+    "broad_spectrum_probability",
+    "mean_activity_probability",
+    "mean_gram_negative_activity_probability",
+    "mean_gram_positive_activity_probability",
+    "mean_mdr_activity_probability",
+    "hemolysis_probability",
+    "predicted_log2_mic_summary",
+    "predicted_log2_hc50"
+  ],
+  "fit_split": "train",
+  "min_group_coverage": 1.0,
+  "min_panel_coverage": 0.8,
+  "property_metadata_sha256": "44cf3799702fed7261451614d3186a8324018564722d4b52b2a48309a771097d",
+  "replicate_aggregation": "median with median absolute deviation uncertainty",
+  "schema_version": 1,
+  "semantic_definition": {
+    "activity_temperature": 1.0,
+    "activity_threshold_log2_mic": 4.0,
+    "broad_spectrum_aggregation": {
+      "method": "minimum"
+    },
+    "ranking_strains": [
+      "A_baumannii_ATCC19606",
+      "E_coli_ATCC11775",
+      "E_coli_AIC221",
+      "E_coli_AIC222",
+      "K_pneumoniae_ATCC13883",
+      "P_aeruginosa_PAO1",
+      "P_aeruginosa_PA14",
+      "S_aureus_ATCC12600",
+      "S_aureus_ATCC_BAA1556",
+      "E_faecalis_ATCC700802",
+      "E_faecium_ATCC700221"
+    ],
+    "schema_version": 1,
+    "strain_groups": {
+      "gram_negative": [
+        "A_baumannii_ATCC19606",
+        "E_coli_ATCC11775",
+        "E_coli_AIC221",
+        "E_coli_AIC222",
+        "K_pneumoniae_ATCC13883",
+        "P_aeruginosa_PAO1",
+        "P_aeruginosa_PA14"
+      ],
+      "gram_positive": [
+        "S_aureus_ATCC12600",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ],
+      "mdr": [
+        "E_coli_AIC222",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ]
+    }
+  },
+  "source_table_sha256": "ca74b4a4f21ed5f74c0a46086af4b2665b7de2695ea8d572388ade455452e13b",
+  "split_manifest_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
+  "table_sha256": "79220540a7215b31ee3a356a00b4fcfd377c0ee64a8413cd70acb9051b650d54",
+  "train_sequence_count": 18943
+}

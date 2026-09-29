@@ -55,11 +55,11 @@
   "panel_note": "11-strain proxy panel; not the complete official 20-strain wet-lab panel",
   "alias_audit": "AIG221/AIG222 source names explicitly mapped to official AIC221/AIC222 identifiers",
   "measured_precedence": "measured_public_database supersedes pseudo_apex_or_source_model at condition aggregation; raw observations retained",
-  "ctmc_training_fasta": "/tmp/amp-ctmc-deadline-smoke-ba5jqo4y/training.fasta",
-  "ctmc_training_fasta_sha256": "cc73e8b3da04481042fc53e1a2988bc1ba7ddd41f51551f588a88dbc2ba14a2f",
-  "ctmc_cluster_split_manifest": "/tmp/amp-ctmc-deadline-smoke-ba5jqo4y/splits.csv",
-  "ctmc_cluster_split_sha256": "c0acc9c6e2cba82d125c0075b79df57177cba256635818c8e57d05b2781eecbb",
-  "ctmc_train_count": 8,
-  "ctmc_validation_count": 8,
+  "ctmc_training_fasta": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/training.fasta",
+  "ctmc_training_fasta_sha256": "fbeafaba72deba55748060b2d0451195a9a3b7ddd26a30b0c8f3ec4db03cb8c2",
+  "ctmc_cluster_split_manifest": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/processed/deadline_split_manifest.csv",
+  "ctmc_cluster_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
+  "ctmc_train_count": 15652,
+  "ctmc_validation_count": 1870,
   "ctmc_checkpoint_format_version": 2
 }

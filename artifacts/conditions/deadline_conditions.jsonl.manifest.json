@@ -1,0 +1,78 @@
+{
+  "condition_names": [
+    "amp_probability",
+    "broad_spectrum_probability",
+    "mean_activity_probability",
+    "mean_gram_negative_activity_probability",
+    "mean_gram_positive_activity_probability",
+    "mean_mdr_activity_probability",
+    "hemolysis_probability",
+    "predicted_log2_mic_summary",
+    "predicted_log2_hc50"
+  ],
+  "kind": "conditioning_pseudo_labels",
+  "measured_table_sha256": "79220540a7215b31ee3a356a00b4fcfd377c0ee64a8413cd70acb9051b650d54",
+  "property_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
+  "property_metadata_sha256": "44cf3799702fed7261451614d3186a8324018564722d4b52b2a48309a771097d",
+  "ranking_strains": [
+    "A_baumannii_ATCC19606",
+    "E_coli_ATCC11775",
+    "E_coli_AIC221",
+    "E_coli_AIC222",
+    "K_pneumoniae_ATCC13883",
+    "P_aeruginosa_PAO1",
+    "P_aeruginosa_PA14",
+    "S_aureus_ATCC12600",
+    "S_aureus_ATCC_BAA1556",
+    "E_faecalis_ATCC700802",
+    "E_faecium_ATCC700221"
+  ],
+  "schema_version": 1,
+  "semantic_definition": {
+    "activity_temperature": 1.0,
+    "activity_threshold_log2_mic": 4.0,
+    "broad_spectrum_aggregation": {
+      "method": "minimum"
+    },
+    "ranking_strains": [
+      "A_baumannii_ATCC19606",
+      "E_coli_ATCC11775",
+      "E_coli_AIC221",
+      "E_coli_AIC222",
+      "K_pneumoniae_ATCC13883",
+      "P_aeruginosa_PAO1",
+      "P_aeruginosa_PA14",
+      "S_aureus_ATCC12600",
+      "S_aureus_ATCC_BAA1556",
+      "E_faecalis_ATCC700802",
+      "E_faecium_ATCC700221"
+    ],
+    "schema_version": 1,
+    "strain_groups": {
+      "gram_negative": [
+        "A_baumannii_ATCC19606",
+        "E_coli_ATCC11775",
+        "E_coli_AIC221",
+        "E_coli_AIC222",
+        "K_pneumoniae_ATCC13883",
+        "P_aeruginosa_PAO1",
+        "P_aeruginosa_PA14"
+      ],
+      "gram_positive": [
+        "S_aureus_ATCC12600",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ],
+      "mdr": [
+        "E_coli_AIC222",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ]
+    }
+  },
+  "source_fasta_sha256": "fbeafaba72deba55748060b2d0451195a9a3b7ddd26a30b0c8f3ec4db03cb8c2",
+  "strain_panel_sha256": "bc103acdb6af696595cf0e91deff41a1e0583798ffc66daa43141b1c9976624e",
+  "table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5"
+}

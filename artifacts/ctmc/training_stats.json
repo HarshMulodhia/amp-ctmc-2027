@@ -1,0 +1,390 @@
+{
+  "checkpoint_version": 2,
+  "canvas_semantics": "residues_plus_eos",
+  "conditioning_contract": {
+    "training_mode": "property_conditioned",
+    "condition_names": [
+      "amp_probability",
+      "broad_spectrum_probability",
+      "mean_activity_probability",
+      "mean_gram_negative_activity_probability",
+      "mean_gram_positive_activity_probability",
+      "mean_mdr_activity_probability",
+      "hemolysis_probability",
+      "predicted_log2_mic_summary",
+      "predicted_log2_hc50"
+    ],
+    "condition_normalization": {
+      "schema_version": 1,
+      "condition_names": [
+        "amp_probability",
+        "broad_spectrum_probability",
+        "mean_activity_probability",
+        "mean_gram_negative_activity_probability",
+        "mean_gram_positive_activity_probability",
+        "mean_mdr_activity_probability",
+        "hemolysis_probability",
+        "predicted_log2_mic_summary",
+        "predicted_log2_hc50"
+      ],
+      "fit_split": "train",
+      "fitting_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
+      "statistics": {
+        "amp_probability": {
+          "mean": 0.9895516127983902,
+          "std": 0.022022516793475323,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "broad_spectrum_probability": {
+          "mean": 0.05211151874267653,
+          "std": 0.014763755150890357,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "mean_activity_probability": {
+          "mean": 0.09480685488360102,
+          "std": 0.07963234677038321,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "mean_gram_negative_activity_probability": {
+          "mean": 0.10016648693554742,
+          "std": 0.09024257219757495,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "mean_gram_positive_activity_probability": {
+          "mean": 0.08542749879269508,
+          "std": 0.06323061912507355,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "mean_mdr_activity_probability": {
+          "mean": 0.09933142376338835,
+          "std": 0.08531301698358909,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "hemolysis_probability": {
+          "mean": 0.30918406869009674,
+          "std": 0.25617985121584574,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "predicted_log2_mic_summary": {
+          "mean": 6.518086259937755,
+          "std": 0.6428289385965159,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        },
+        "predicted_log2_hc50": {
+          "mean": 7.367938003000413,
+          "std": 1.5523440724653168,
+          "count": 15652,
+          "lower_clip": -5.0,
+          "upper_clip": 5.0
+        }
+      }
+    },
+    "semantic_definition": {
+      "activity_temperature": 1.0,
+      "activity_threshold_log2_mic": 4.0,
+      "broad_spectrum_aggregation": {
+        "method": "minimum"
+      },
+      "ranking_strains": [
+        "A_baumannii_ATCC19606",
+        "E_coli_ATCC11775",
+        "E_coli_AIC221",
+        "E_coli_AIC222",
+        "K_pneumoniae_ATCC13883",
+        "P_aeruginosa_PAO1",
+        "P_aeruginosa_PA14",
+        "S_aureus_ATCC12600",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ],
+      "schema_version": 1,
+      "strain_groups": {
+        "gram_negative": [
+          "A_baumannii_ATCC19606",
+          "E_coli_ATCC11775",
+          "E_coli_AIC221",
+          "E_coli_AIC222",
+          "K_pneumoniae_ATCC13883",
+          "P_aeruginosa_PAO1",
+          "P_aeruginosa_PA14"
+        ],
+        "gram_positive": [
+          "S_aureus_ATCC12600",
+          "S_aureus_ATCC_BAA1556",
+          "E_faecalis_ATCC700802",
+          "E_faecium_ATCC700221"
+        ],
+        "mdr": [
+          "E_coli_AIC222",
+          "S_aureus_ATCC_BAA1556",
+          "E_faecalis_ATCC700802",
+          "E_faecium_ATCC700221"
+        ]
+      }
+    },
+    "condition_table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5",
+    "condition_manifest_sha256": "6792c0f75b85f3d5ab9ec2d6e001d9c7adc1fcc3cff6c05ef78ac1fe07c196d4",
+    "property_model_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
+    "measured_count": 5383,
+    "pseudo_label_count": 53240,
+    "condition_dropout": 0.15,
+    "training_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762"
+  },
+  "validation_condition_metrics": {
+    "condition_drop_fraction": 0.0,
+    "conditional_denoising_loss": 1.9327296872933706,
+    "unconditional_denoising_loss": 2.323227802912394,
+    "teacher_conditional_loss": 1.9134481569131216,
+    "measured_conditional_loss": 0.0
+  },
+  "best_val_loss": 1.9190034747123719,
+  "history": [
+    {
+      "epoch": 1.0,
+      "train_loss": 3.2614827204723746,
+      "val_loss": 2.961598205566406,
+      "condition_drop_fraction": 0.14851190478217846
+    },
+    {
+      "epoch": 2.0,
+      "train_loss": 2.867319084673512,
+      "val_loss": 2.782583395640055,
+      "condition_drop_fraction": 0.15101332202249643
+    },
+    {
+      "epoch": 3.0,
+      "train_loss": 2.694442992307702,
+      "val_loss": 2.5959100206693013,
+      "condition_drop_fraction": 0.15302579366430943
+    },
+    {
+      "epoch": 4.0,
+      "train_loss": 2.573551147811267,
+      "val_loss": 2.525080132484436,
+      "condition_drop_fraction": 0.14684665533048766
+    },
+    {
+      "epoch": 5.0,
+      "train_loss": 2.504181282860892,
+      "val_loss": 2.435978901386261,
+      "condition_drop_fraction": 0.14838435376177028
+    },
+    {
+      "epoch": 6.0,
+      "train_loss": 2.464747327687789,
+      "val_loss": 2.3163269122441608,
+      "condition_drop_fraction": 0.1510912698446488
+    },
+    {
+      "epoch": 7.0,
+      "train_loss": 2.3824879432211117,
+      "val_loss": 2.2736639300982158,
+      "condition_drop_fraction": 0.14917800453852634
+    },
+    {
+      "epoch": 8.0,
+      "train_loss": 2.3269305238918383,
+      "val_loss": 2.1865450223286946,
+      "condition_drop_fraction": 0.151459750593925
+    },
+    {
+      "epoch": 9.0,
+      "train_loss": 2.274385161789096,
+      "val_loss": 2.158299692471822,
+      "condition_drop_fraction": 0.15272108845564783
+    },
+    {
+      "epoch": 10.0,
+      "train_loss": 2.231398574186831,
+      "val_loss": 2.1164398988087973,
+      "condition_drop_fraction": 0.1469954648796393
+    },
+    {
+      "epoch": 11.0,
+      "train_loss": 2.194150266355398,
+      "val_loss": 2.095696924130122,
+      "condition_drop_fraction": 0.15089994331403656
+    },
+    {
+      "epoch": 12.0,
+      "train_loss": 2.151389846996385,
+      "val_loss": 2.0496219635009765,
+      "condition_drop_fraction": 0.15238095239108923
+    },
+    {
+      "epoch": 13.0,
+      "train_loss": 2.1252299289314114,
+      "val_loss": 2.020965353647868,
+      "condition_drop_fraction": 0.14742772110870905
+    },
+    {
+      "epoch": 14.0,
+      "train_loss": 2.0961187693537497,
+      "val_loss": 1.9807704925537108,
+      "condition_drop_fraction": 0.15015589570512577
+    },
+    {
+      "epoch": 15.0,
+      "train_loss": 2.061091662426384,
+      "val_loss": 1.9587536692619323,
+      "condition_drop_fraction": 0.15085742631737067
+    },
+    {
+      "epoch": 16.0,
+      "train_loss": 2.0310792835391296,
+      "val_loss": 1.9457528332869212,
+      "condition_drop_fraction": 0.146598639476056
+    },
+    {
+      "epoch": 17.0,
+      "train_loss": 2.0198882818222046,
+      "val_loss": 1.9433263937632244,
+      "condition_drop_fraction": 0.14702380953394636
+    },
+    {
+      "epoch": 18.0,
+      "train_loss": 2.006740808973507,
+      "val_loss": 1.9233716348807017,
+      "condition_drop_fraction": 0.15162981859579377
+    },
+    {
+      "epoch": 19.0,
+      "train_loss": 1.997107907217376,
+      "val_loss": 1.9190034747123719,
+      "condition_drop_fraction": 0.14916383222657806
+    },
+    {
+      "epoch": 20.0,
+      "train_loss": 1.990637470264824,
+      "val_loss": 1.9327296872933706,
+      "condition_drop_fraction": 0.15065192744439962
+    }
+  ],
+  "feature_stats": {
+    "means": {
+      "length": 21.583248138427734,
+      "net_charge": 3.4771595001220703,
+      "hydrophobic_fraction": 0.4233178496360779,
+      "composition_entropy": 2.0031070709228516,
+      "aromatic_fraction": 0.11715955287218094,
+      "comp_A": 0.06463439762592316,
+      "comp_C": 0.042185064405202866,
+      "comp_D": 0.019021278247237206,
+      "comp_E": 0.023544909432530403,
+      "comp_F": 0.041488874703645706,
+      "comp_G": 0.06899593025445938,
+      "comp_H": 0.020871398970484734,
+      "comp_I": 0.06982018798589706,
+      "comp_K": 0.11431286484003067,
+      "comp_L": 0.09149585664272308,
+      "comp_M": 0.01196278166025877,
+      "comp_N": 0.031154338270425797,
+      "comp_P": 0.03684181347489357,
+      "comp_Q": 0.025536658242344856,
+      "comp_R": 0.12400364875793457,
+      "comp_S": 0.040626320987939835,
+      "comp_T": 0.02958793379366398,
+      "comp_V": 0.06824508309364319,
+      "comp_W": 0.0519755519926548,
+      "comp_Y": 0.02369513176381588
+    },
+    "stds": {
+      "length": 11.258176803588867,
+      "net_charge": 3.28771710395813,
+      "hydrophobic_fraction": 0.14851897954940796,
+      "composition_entropy": 0.4281756579875946,
+      "aromatic_fraction": 0.10937326401472092,
+      "comp_A": 0.07847358286380768,
+      "comp_C": 0.07182308286428452,
+      "comp_D": 0.037675172090530396,
+      "comp_E": 0.04583902657032013,
+      "comp_F": 0.05769609287381172,
+      "comp_G": 0.07611450552940369,
+      "comp_H": 0.0435873419046402,
+      "comp_I": 0.07076725363731384,
+      "comp_K": 0.11286246031522751,
+      "comp_L": 0.09647073596715927,
+      "comp_M": 0.02995363250374794,
+      "comp_N": 0.044408220797777176,
+      "comp_P": 0.07245682179927826,
+      "comp_Q": 0.04493987187743187,
+      "comp_R": 0.13177458941936493,
+      "comp_S": 0.0536101832985878,
+      "comp_T": 0.045100003480911255,
+      "comp_V": 0.0751725435256958,
+      "comp_W": 0.09572014212608337,
+      "comp_Y": 0.04111724719405174
+    },
+    "q05": {
+      "length": 9.0,
+      "net_charge": -1.9449999332427979,
+      "hydrophobic_fraction": 0.190476194024086,
+      "composition_entropy": 1.2493431568145752,
+      "aromatic_fraction": 0.0,
+      "comp_A": 0.0,
+      "comp_C": 0.0,
+      "comp_D": 0.0,
+      "comp_E": 0.0,
+      "comp_F": 0.0,
+      "comp_G": 0.0,
+      "comp_H": 0.0,
+      "comp_I": 0.0,
+      "comp_K": 0.0,
+      "comp_L": 0.0,
+      "comp_M": 0.0,
+      "comp_N": 0.0,
+      "comp_P": 0.0,
+      "comp_Q": 0.0,
+      "comp_R": 0.0,
+      "comp_S": 0.0,
+      "comp_T": 0.0,
+      "comp_V": 0.0,
+      "comp_W": 0.0,
+      "comp_Y": 0.0
+    },
+    "q95": {
+      "length": 45.0,
+      "net_charge": 9.0,
+      "hydrophobic_fraction": 0.6666666865348816,
+      "composition_entropy": 2.5951156616210938,
+      "aromatic_fraction": 0.3333333432674408,
+      "comp_A": 0.2083333283662796,
+      "comp_C": 0.190476194024086,
+      "comp_D": 0.09090909361839294,
+      "comp_E": 0.1111111119389534,
+      "comp_F": 0.15000000596046448,
+      "comp_G": 0.2083333283662796,
+      "comp_H": 0.10576707869768143,
+      "comp_I": 0.20000000298023224,
+      "comp_K": 0.3333333432674408,
+      "comp_L": 0.2777777910232544,
+      "comp_M": 0.07692307978868484,
+      "comp_N": 0.11428571492433548,
+      "comp_P": 0.1666666716337204,
+      "comp_Q": 0.1111111119389534,
+      "comp_R": 0.375,
+      "comp_S": 0.1428571492433548,
+      "comp_T": 0.1111111119389534,
+      "comp_V": 0.25,
+      "comp_W": 0.3076923191547394,
+      "comp_Y": 0.1111111119389534
+    }
+  }
+}

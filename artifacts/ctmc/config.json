@@ -1,0 +1,237 @@
+{
+  "vocab": "ACDEFGHIKLMNPQRSTVWY",
+  "max_length": 50,
+  "checkpoint_version": 2,
+  "canvas_semantics": "residues_plus_eos",
+  "min_length": 8,
+  "condition_dim": 9,
+  "condition_dropout": 0.15,
+  "mixed_precision": true,
+  "cfg_scale": 1.5,
+  "training_mode": "property_conditioned",
+  "condition_table_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl",
+  "condition_manifest_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl.manifest.json",
+  "property_metadata_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/property/model_metadata.json",
+  "ctmc_pretraining_mode": "none",
+  "teacher_checkpoint_dir": null,
+  "teacher_model_name": "facebook/esm2_t30_150M_UR50D",
+  "teacher_revision": null,
+  "teacher_distill_weight": 0.0,
+  "teacher_logit_kl_weight": 0.0,
+  "d_model": 512,
+  "n_heads": 16,
+  "n_layers": 10,
+  "d_ff": 2048,
+  "dropout": 0.1,
+  "batch_size": 64,
+  "learning_rate": 0.0003,
+  "learning_rate_min": 5e-07,
+  "weight_decay": 0.01,
+  "grad_clip_norm": 1.0,
+  "n_epochs": 20,
+  "early_stopping_patience": 10,
+  "early_stopping_threshold": 5e-05,
+  "scheduler_type": "cosine",
+  "val_fraction": 0.1,
+  "log_masking_diagnostics": true,
+  "debug_overfit_samples": null,
+  "reverse_steps": 64,
+  "generation_batch_size": 256,
+  "generation_temperatures": [
+    0.85,
+    1.0,
+    1.1
+  ],
+  "generation_step_counts": [
+    96,
+    64,
+    48
+  ],
+  "generation_shares": [
+    0.4,
+    0.4,
+    0.2
+  ],
+  "confidence_reveal_fraction": 0.0,
+  "dfm_stochasticity": 0.0,
+  "candidate_pool_size": 120000,
+  "max_generation_attempts": 300,
+  "medium_shortlist_size": 10000,
+  "final_shortlist_size": 3000,
+  "n_sequences": 50000,
+  "top_k": 100,
+  "mmr_lambda_diversity": 0.5,
+  "score_weights": {
+    "discriminator": 0.18,
+    "masked_pseudo_likelihood": 0.16,
+    "conformity": 0.14,
+    "novelty": 0.12,
+    "quality": 0.12,
+    "activity_hemolysis": 0.18,
+    "esm2_pseudo_perplexity": 0.1
+  },
+  "score_combine_mode": "geometric",
+  "discriminator_ensemble_size": 5,
+  "seed": 42,
+  "device": "auto",
+  "wandb_enabled": false,
+  "wandb_project": "AMPGen",
+  "wandb_entity": null,
+  "wandb_mode": "disabled",
+  "training_fasta_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/training.fasta",
+  "cluster_split_manifest_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/processed/deadline_split_manifest.csv",
+  "antibacterial_fasta_path": "data/antibacterial.fasta",
+  "background_fasta_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/background.fasta",
+  "checkpoint_dir": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/ctmc",
+  "resume_from": null,
+  "generate_dir": "generate_broad_spectrum",
+  "novelty_similarity_ceiling": 0.6,
+  "diversity_similarity_ceiling": 0.85,
+  "top_identity_ceiling": 0.8,
+  "official_identity_function": null,
+  "require_official_compliance": true,
+  "external_scorer_project_dir": "scorer",
+  "external_scorer_timeout_sec": 600,
+  "condition_schema": [
+    "amp_probability",
+    "broad_spectrum_probability",
+    "mean_activity_probability",
+    "mean_gram_negative_activity_probability",
+    "mean_gram_positive_activity_probability",
+    "mean_mdr_activity_probability",
+    "hemolysis_probability",
+    "predicted_log2_mic_summary",
+    "predicted_log2_hc50"
+  ],
+  "condition_normalization": {
+    "schema_version": 1,
+    "condition_names": [
+      "amp_probability",
+      "broad_spectrum_probability",
+      "mean_activity_probability",
+      "mean_gram_negative_activity_probability",
+      "mean_gram_positive_activity_probability",
+      "mean_mdr_activity_probability",
+      "hemolysis_probability",
+      "predicted_log2_mic_summary",
+      "predicted_log2_hc50"
+    ],
+    "fit_split": "train",
+    "fitting_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
+    "statistics": {
+      "amp_probability": {
+        "mean": 0.9895516127983902,
+        "std": 0.022022516793475323,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "broad_spectrum_probability": {
+        "mean": 0.05211151874267653,
+        "std": 0.014763755150890357,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "mean_activity_probability": {
+        "mean": 0.09480685488360102,
+        "std": 0.07963234677038321,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "mean_gram_negative_activity_probability": {
+        "mean": 0.10016648693554742,
+        "std": 0.09024257219757495,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "mean_gram_positive_activity_probability": {
+        "mean": 0.08542749879269508,
+        "std": 0.06323061912507355,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "mean_mdr_activity_probability": {
+        "mean": 0.09933142376338835,
+        "std": 0.08531301698358909,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "hemolysis_probability": {
+        "mean": 0.30918406869009674,
+        "std": 0.25617985121584574,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "predicted_log2_mic_summary": {
+        "mean": 6.518086259937755,
+        "std": 0.6428289385965159,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      },
+      "predicted_log2_hc50": {
+        "mean": 7.367938003000413,
+        "std": 1.5523440724653168,
+        "count": 15652,
+        "lower_clip": -5.0,
+        "upper_clip": 5.0
+      }
+    }
+  },
+  "condition_semantics": {
+    "activity_temperature": 1.0,
+    "activity_threshold_log2_mic": 4.0,
+    "broad_spectrum_aggregation": {
+      "method": "minimum"
+    },
+    "ranking_strains": [
+      "A_baumannii_ATCC19606",
+      "E_coli_ATCC11775",
+      "E_coli_AIC221",
+      "E_coli_AIC222",
+      "K_pneumoniae_ATCC13883",
+      "P_aeruginosa_PAO1",
+      "P_aeruginosa_PA14",
+      "S_aureus_ATCC12600",
+      "S_aureus_ATCC_BAA1556",
+      "E_faecalis_ATCC700802",
+      "E_faecium_ATCC700221"
+    ],
+    "schema_version": 1,
+    "strain_groups": {
+      "gram_negative": [
+        "A_baumannii_ATCC19606",
+        "E_coli_ATCC11775",
+        "E_coli_AIC221",
+        "E_coli_AIC222",
+        "K_pneumoniae_ATCC13883",
+        "P_aeruginosa_PAO1",
+        "P_aeruginosa_PA14"
+      ],
+      "gram_positive": [
+        "S_aureus_ATCC12600",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ],
+      "mdr": [
+        "E_coli_AIC222",
+        "S_aureus_ATCC_BAA1556",
+        "E_faecalis_ATCC700802",
+        "E_faecium_ATCC700221"
+      ]
+    }
+  },
+  "condition_table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5",
+  "condition_manifest_sha256": "6792c0f75b85f3d5ab9ec2d6e001d9c7adc1fcc3cff6c05ef78ac1fe07c196d4",
+  "property_model_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
+  "measured_count": 5383,
+  "pseudo_label_count": 53240,
+  "training_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762"
+}

@@ -1,0 +1,9 @@
+{
+  "vocab": "ACDEFGHIKLMNPQRSTVWY",
+  "max_length": 50,
+  "eos_token": "<EOS>",
+  "mask_token": "<MASK>",
+  "pad_token": "<PAD>",
+  "version": 2,
+  "canvas_semantics": "residues_plus_eos"
+}
