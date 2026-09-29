@@ -5,554 +5,554 @@
   "top_count": 100,
   "top_unique_count": 100,
   "top_is_library_subset": true,
-  "max_top_identity": 0.8,
+  "max_top_identity": 0.7878787878787878,
   "identity_threshold": 0.8,
   "nearest_reference": [
     {
-      "sequence": "KWFKFKKFIIVKSLIKVFKF",
-      "reference": "KFKKFKKFKKFK",
-      "identity": 0.6875
-    },
-    {
-      "sequence": "KNWLILAAKIFKKL",
-      "reference": "KILKRLAAKIKKIL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "KLWKILKGIVKL",
-      "reference": "KWKLKKGAVKVL",
-      "identity": 0.75
-    },
-    {
-      "sequence": "IKWKLLGIIKKIL",
-      "reference": "IKKIIKKI",
-      "identity": 0.7619047619047619
-    },
-    {
-      "sequence": "KVNWKNILGKIISKIL",
-      "reference": "KNWKAILKHIIK",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "KVWLKKIIIKLL",
-      "reference": "GLKKIIKKLL",
-      "identity": 0.7272727272727273
-    },
-    {
-      "sequence": "INWKKLIGKIIKVL",
-      "reference": "VNWKKLGKIKVK",
-      "identity": 0.7692307692307692
-    },
-    {
-      "sequence": "KKWKVLGIIIKKLL",
-      "reference": "GLKKIIKKLL",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "KWLKFKKIIVASIVKLKSFKKF",
-      "reference": "KWKLFKKIKFLHSAKKF",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "KLKLGWIIKKLL",
-      "reference": "KLKKLWKKLLK",
-      "identity": 0.782608695652174
-    },
-    {
-      "sequence": "KWLKLGKFILGKL",
-      "reference": "KLKLKLKL",
-      "identity": 0.7619047619047619
-    },
-    {
-      "sequence": "KVLLWKIVKKLI",
-      "reference": "KLLKRIKKLL",
-      "identity": 0.7272727272727273
-    },
-    {
-      "sequence": "KWKFIKIIVKKKIKLFSVIKKF",
-      "reference": "KWKLFKKIKFLHSAKKF",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "KNWKKLGKIIFKLF",
-      "reference": "KNWKKLGKIKVK",
-      "identity": 0.7692307692307692
-    },
-    {
-      "sequence": "NWKKIFLSAIIKFVK",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.8
-    },
-    {
-      "sequence": "NWKKVLKIIGKLL",
-      "reference": "VNWKKVLGKIIKVAK",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "KWKKLIKIIGKLL",
-      "reference": "KWLKKLLKKLL",
-      "identity": 0.75
-    },
-    {
-      "sequence": "INLKLLWAIKKLL",
-      "reference": "LKLLKKLL",
-      "identity": 0.7619047619047619
-    },
-    {
-      "sequence": "KNWWKLVGKIIVSKVL",
-      "reference": "KNWKKLGKIKVK",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "GWKLILAKIKKLL",
-      "reference": "GLLKIIKKLL",
-      "identity": 0.782608695652174
-    },
-    {
-      "sequence": "KWKLFKIFIKKLL",
-      "reference": "KLLKFIKKLL",
-      "identity": 0.782608695652174
-    },
-    {
-      "sequence": "WKLALAKIIGKLL",
-      "reference": "WKLFLKAVKKLL",
-      "identity": 0.72
-    },
-    {
-      "sequence": "NWLKIGKIINKLL",
-      "reference": "GLKKIIKKLL",
-      "identity": 0.6956521739130435
-    },
-    {
-      "sequence": "LNVKLLAIIKKLL",
-      "reference": "LKLLKKLL",
-      "identity": 0.7619047619047619
-    },
-    {
-      "sequence": "KNWKVLGALIKGLL",
-      "reference": "KWKLFIGAVLKVL",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "KWKIIVLKKIFKAL",
-      "reference": "KKLFKKILKAL",
-      "identity": 0.72
-    },
-    {
-      "sequence": "KWKVFKKIIVIKKFLVAKKF",
-      "reference": "KWKLFKKIGIGKFLHVAKKF",
-      "identity": 0.8
-    },
-    {
-      "sequence": "KLFLAKIIKVIL",
-      "reference": "KLLKIVVIKVLK",
-      "identity": 0.75
-    },
-    {
-      "sequence": "KWKIFKKVIIAKIVVLK",
-      "reference": "KNWKKILKKIIKVVK",
-      "identity": 0.75
-    },
-    {
-      "sequence": "KNWKILAKFAIKLL",
-      "reference": "INWKGIALMAKKLL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "IKNWKKLIKGLIKVAKL",
-      "reference": "KNWKKLKKIKVK",
-      "identity": 0.7586206896551724
-    },
-    {
-      "sequence": "NVKWKILGKFIKKLL",
-      "reference": "IKKILSKIKKLL",
-      "identity": 0.7407407407407407
-    },
-    {
-      "sequence": "INWGKLLGKILKI",
-      "reference": "INWLKLGKKILGAI",
-      "identity": 0.7407407407407407
-    },
-    {
-      "sequence": "KVILVKIINLVKKIL",
-      "reference": "NILNTIINLAKKIL",
-      "identity": 0.6896551724137931
-    },
-    {
-      "sequence": "KNWKKIIGKFIKVL",
-      "reference": "KNWKKLGKIKVK",
-      "identity": 0.7692307692307692
-    },
-    {
-      "sequence": "IFWKKFKGILKIL",
-      "reference": "WKKLFKKLKIL",
-      "identity": 0.75
-    },
-    {
-      "sequence": "KKLIFKLNIIVIKAVKKFKKKVFL",
-      "reference": "KWKLFKKIGIGKVVKKVLKKVLK",
-      "identity": 0.6382978723404256
-    },
-    {
-      "sequence": "LWKIIKIGKKLL",
-      "reference": "GLLKIIKKLL",
-      "identity": 0.7272727272727273
-    },
-    {
-      "sequence": "KKVNWKKILVVIKIAVKAI",
-      "reference": "VNWKKILGKIKVK",
-      "identity": 0.6875
-    },
-    {
-      "sequence": "KNWKFKKFLFIKIAKKLF",
-      "reference": "KKFKKFFKKLK",
-      "identity": 0.6896551724137931
-    },
-    {
-      "sequence": "INWKILKLIKKFL",
-      "reference": "INWLKLGKKSAL",
-      "identity": 0.72
-    },
-    {
-      "sequence": "INWKKLAAGILILK",
-      "reference": "INWKKLLDAAKQIL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "KWLKVGKIIRNLL",
-      "reference": "KWKLFKGIRAVLKVL",
-      "identity": 0.6428571428571428
-    },
-    {
-      "sequence": "KVVNWKKIIGIVKKVAKVKFF",
-      "reference": "VNWKKILGKIKKVVK",
-      "identity": 0.7222222222222222
-    },
-    {
-      "sequence": "KFKLKILVKIFKKLL",
-      "reference": "FLKILKKLL",
-      "identity": 0.75
-    },
-    {
-      "sequence": "IWKKLLFAIIKVKL",
-      "reference": "IDWKKLLDAAKKIL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "INWKLLKAIGKLL",
-      "reference": "INWKKIASIGKEVL",
-      "identity": 0.7407407407407407
-    },
-    {
-      "sequence": "KKKKFKIIVILKVIKFLKF",
-      "reference": "KWKKFLKIPKFLHAAKKF",
-      "identity": 0.6486486486486487
-    },
-    {
-      "sequence": "IKWKILAKIIKVLK",
-      "reference": "IKWKAILDAVKKVL",
-      "identity": 0.7857142857142857
-    },
-    {
-      "sequence": "KWILFKKIKIAVVKL",
-      "reference": "KWKLFKKINWKKIGAVVKKIL",
-      "identity": 0.7777777777777778
-    },
-    {
-      "sequence": "KVVWRKIIGKIINVAKKF",
-      "reference": "VNWKKILGKIIKVAK",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "NWKKILGAIIGKVAL",
-      "reference": "VNWKKILGKIIKVAK",
-      "identity": 0.8
-    },
-    {
-      "sequence": "IKKLIAKIWSKLF",
-      "reference": "ILKKIWKIKKLF",
-      "identity": 0.72
-    },
-    {
-      "sequence": "KWIVLKAFIKVIL",
-      "reference": "KILKRLAAKIKKIL",
-      "identity": 0.6666666666666667
-    },
-    {
-      "sequence": "KLWVKIIKILKL",
-      "reference": "KLFKKILKYL",
-      "identity": 0.7272727272727273
-    },
-    {
-      "sequence": "KNVKFKKIIFIKFLLVKLKK",
-      "reference": "KWKLFKKIGIGKFLKKK",
-      "identity": 0.7027027027027026
-    },
-    {
-      "sequence": "VWKKIIGIAKIL",
-      "reference": "VNWKKILGKI",
-      "identity": 0.7272727272727273
-    },
-    {
-      "sequence": "KVNWKKVIVGIIISVKKL",
-      "reference": "VNWKKILGIIKVVK",
-      "identity": 0.6875
-    },
-    {
-      "sequence": "KVLKWKIIKIVAKFAHLVKKF",
-      "reference": "KWFKKIPKFLHLAKKF",
-      "identity": 0.6486486486486487
-    },
-    {
-      "sequence": "INWKSILKGIIKLF",
-      "reference": "ILGKILKGIKKLF",
-      "identity": 0.7407407407407407
-    },
-    {
-      "sequence": "KNNWKIGILGIIIKLAKKL",
+      "sequence": "KNFKKFIIGKIIKALKKL",
       "reference": "KKKIIIIIKKK",
-      "identity": 0.6666666666666667
+      "identity": 0.6896551724137931
     },
     {
-      "sequence": "FIKLKLFAKIKVKLL",
-      "reference": "FLKLAKKLL",
-      "identity": 0.75
+      "sequence": "KNFKKKFIFKGILKAAIKLLK",
+      "reference": "VKRFKKFFRKLKKSVLL",
+      "identity": 0.631578947368421
     },
     {
-      "sequence": "NWKKILKIIKFL",
-      "reference": "KNWKAILKHIIK",
-      "identity": 0.75
-    },
-    {
-      "sequence": "IWKLAFKIKKLL",
-      "reference": "WKLFKKILKKL",
-      "identity": 0.782608695652174
-    },
-    {
-      "sequence": "INWLKLAKIGKIL",
-      "reference": "INWLKLGKKILGA",
-      "identity": 0.7692307692307692
-    },
-    {
-      "sequence": "INWIKLAAIIKVLK",
-      "reference": "INWKALLDAAKKVL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "FNWLKLAAKIIVVAK",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.7333333333333334
-    },
-    {
-      "sequence": "KKKIKFKKKFKKKKKFFKKKKFKKFKKKGKFKKKWKNFKKKRFRKKIKLK",
-      "reference": "KFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFK",
-      "identity": 0.7755102040816326
-    },
-    {
-      "sequence": "INWKKLAKIIIVKL",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.7586206896551724
-    },
-    {
-      "sequence": "KNWLKLIKIIFVAK",
-      "reference": "KNWKAILKHIIK",
+      "sequence": "KFIKNILFKVIGKVL",
+      "reference": "KKLFKKILKVL",
       "identity": 0.6923076923076923
     },
     {
-      "sequence": "IWKKLAKIIKVVL",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.7857142857142857
-    },
-    {
-      "sequence": "NWKKIALAIIIKL",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "GLWKIISKIL",
-      "reference": "GLLKIIKKLL",
-      "identity": 0.7
-    },
-    {
-      "sequence": "NWKLIGAIGKLL",
-      "reference": "NWKKIASIGKEVLKAL",
-      "identity": 0.7142857142857143
-    },
-    {
-      "sequence": "NLWKIIAKIL",
-      "reference": "NLWKIKTPI",
-      "identity": 0.736842105263158
-    },
-    {
-      "sequence": "KFKLFAKIGKLL",
-      "reference": "KKLFKKILKLL",
-      "identity": 0.782608695652174
-    },
-    {
-      "sequence": "NWKLLAKIILFLK",
-      "reference": "KLLKWLLK",
+      "sequence": "KGKLFIKIILKIAAKAKQLL",
+      "reference": "LFKEILEKIKAKL",
       "identity": 0.6666666666666667
     },
     {
-      "sequence": "KWKKKKKIKKFFKKFFKKKKFGKKRFKKRKFKKKFKKKKKVKFLKKFKKF",
-      "reference": "KFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFK",
-      "identity": 0.7959183673469388
+      "sequence": "KANNIWKVIIGIAKKIFAKAKF",
+      "reference": "KIAGKIAKIAGKIAKIAGKIAK",
+      "identity": 0.6363636363636364
     },
     {
-      "sequence": "NWNKKILGKIIAKLL",
+      "sequence": "KKFWKKIIISAAIKKVAKVL",
+      "reference": "KKKIIIIIKKK",
+      "identity": 0.6451612903225806
+    },
+    {
+      "sequence": "KTLKKLKILKIGIAKIKFKFGKAAAKFKKIFKKII",
+      "reference": "KFKKFKKFKKFKKFKKFKKFKKFK",
+      "identity": 0.6101694915254237
+    },
+    {
+      "sequence": "KKVKWLAFIKIILAAKKAVVKILK",
+      "reference": "VIHKLAKLAKKLAKLAK",
+      "identity": 0.6341463414634146
+    },
+    {
+      "sequence": "KKVKFFKIFKVIRLAKIFIAAKKK",
+      "reference": "KFKKFKKFKKFKKFKKFK",
+      "identity": 0.6190476190476191
+    },
+    {
+      "sequence": "KWNLKYIGKKLISKAAKLL",
+      "reference": "KWLKKLLKKLL",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KTKLKWFTFAKIAVAALKKFLKLKK",
+      "reference": "KTKLFKKFAKKLAKKLKKLAKKL",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "VIWKLFGKIIKAVKNIKL",
+      "reference": "VWKKLGKIIKVVK",
+      "identity": 0.7096774193548387
+    },
+    {
+      "sequence": "NIKKLGIKFFKVIAKFAKIAVKKLA",
+      "reference": "VKKLVKKLVKKAVKKA",
+      "identity": 0.6341463414634146
+    },
+    {
+      "sequence": "KFFKVIIKLFFKAANLKLGAKIIKKLK",
+      "reference": "KKKFIYIVLALIKGAIIKKG",
+      "identity": 0.5957446808510638
+    },
+    {
+      "sequence": "KKKLLFSAIIKVAKNIGKKIF",
+      "reference": "WKKIKKIIKKIKKI",
+      "identity": 0.6285714285714286
+    },
+    {
+      "sequence": "KNLWKKIGKIIAKFVAKL",
       "reference": "VNWKKILGKIIKVAK",
-      "identity": 0.8
+      "identity": 0.7878787878787878
     },
     {
-      "sequence": "KLWKIIKSLL",
-      "reference": "KLLKWWKKLL",
-      "identity": 0.7
+      "sequence": "LKWIIIKLKKKILKKKIRKSAIKAFKIKAKYAAAKIKLKFKKWAIKKAKI",
+      "reference": "KKAKKKAKKKAKKKAKKKAKKKAKKKAK",
+      "identity": 0.6153846153846154
     },
     {
-      "sequence": "KVKVIWKKVLSIIKSVVKF",
-      "reference": "VNWKKVLAKIIKVVK",
-      "identity": 0.7058823529411764
+      "sequence": "KWFLKKLLKLVAKKFTIKAAALFGKAKKKFAIIKFKRKFKKFAKKAKKVI",
+      "reference": "KFAKKFAKKFAKKFAKKFAKKFAKKFAKKFAK",
+      "identity": 0.6341463414634146
     },
     {
-      "sequence": "KWVNFKKIIIVNFKKLVKKIF",
-      "reference": "KWKLFKKIGIGKFKLAKKF",
+      "sequence": "KKVLKIKIKKKIKFVKKFIKVFKKFLKKLGIAAKKAFVAKKAKLFMKLIK",
+      "reference": "KFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFK",
+      "identity": 0.627906976744186
+    },
+    {
+      "sequence": "ILLIKLFLKAIKKKLAAIKIAKAILK",
+      "reference": "GLLKRIKTLLKINLKALALAKKIL",
+      "identity": 0.64
+    },
+    {
+      "sequence": "KFLWKIILSAIKALK",
+      "reference": "KFLPWKIFCAITKKC",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KKFFKIAVKAIVKFKKIIKIGKFIVKAKV",
+      "reference": "KFFKKLKKAVKKGFKKFAKV",
+      "identity": 0.6122448979591837
+    },
+    {
+      "sequence": "KVFKKIVIKIAIKAISVAKLW",
+      "reference": "FAKIIAKIAKIAKKIL",
+      "identity": 0.6486486486486487
+    },
+    {
+      "sequence": "FKKLFKAKFISKIAAKVFLLIKAAKK",
+      "reference": "KWKLFKKISKFLHLAKKF",
+      "identity": 0.6818181818181819
+    },
+    {
+      "sequence": "KVLKKFAAKKIALAAKAKFIFKAIF",
+      "reference": "KLAKKLAKLAKKLAKLAKKLA",
+      "identity": 0.6521739130434783
+    },
+    {
+      "sequence": "FKNLVKFFLRFKALAAKIAKKIKLKL",
+      "reference": "KILKRLAAKIKKIL",
       "identity": 0.65
     },
     {
-      "sequence": "ILAWFKLAKKIL",
-      "reference": "IDWKKLNAKKIL",
-      "identity": 0.75
+      "sequence": "IFKKLFKPKLNNFLKKALKIALAKF",
+      "reference": "FKKLKKLFKKILKLK",
+      "identity": 0.7
     },
     {
-      "sequence": "KWKVIKLFVKIKSAVFKK",
-      "reference": "VKKLVKKLVKKAVKKA",
+      "sequence": "IKLKWIKILKFIKIAKLA",
+      "reference": "GILKKILKKILKKL",
+      "identity": 0.6875
+    },
+    {
+      "sequence": "LNLKKFIIAAIKIVAKVLK",
+      "reference": "LNLKKLAAVAKKIL",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "VKWLLKAAIKWKAIKAAIKNL",
+      "reference": "KLALKAALKAWKAAAKLA",
+      "identity": 0.717948717948718
+    },
+    {
+      "sequence": "KWLKFIKLIKKIRKKFKAIFKVIAKKAFKNIAKANFKKIKKLAKKL",
+      "reference": "KKAKKKAKKKAKKKAKKKAKKKAKKKAK",
+      "identity": 0.5945945945945945
+    },
+    {
+      "sequence": "VLVAKLKFKAVAKLAFKLIIKFLLK",
+      "reference": "KLAKLAKKLAKLAKKLAKLAK",
+      "identity": 0.6521739130434783
+    },
+    {
+      "sequence": "KWLWKKFIKIIAKINIKAKLF",
+      "reference": "KWKKFKKGIGKLFV",
+      "identity": 0.6285714285714286
+    },
+    {
+      "sequence": "KWKFFAKFAGKIFKAL",
+      "reference": "FAKFLAKFLKKAL",
+      "identity": 0.6896551724137931
+    },
+    {
+      "sequence": "KLNKIFKKIIIGAIKRIRFGKL",
+      "reference": "FLPKIFKKIAKKL",
+      "identity": 0.6285714285714286
+    },
+    {
+      "sequence": "KFLKKKAIFKAVLKLWKIILK",
+      "reference": "KFLKKAKKFGKAFVKIL",
+      "identity": 0.6842105263157895
+    },
+    {
+      "sequence": "KFYKFIIFKKFLRIKAAILAVKRLA",
+      "reference": "WGKFFAGVKKLTKAILAVRA",
+      "identity": 0.6222222222222222
+    },
+    {
+      "sequence": "KKVLKAIVFSKIKVAKKFIKKLIK",
+      "reference": "KKVVFKVKFKKK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KFLAKFALKKNIKFKAKIIGKLLK",
+      "reference": "FLKAIKKFGKEFKKIGAKLK",
+      "identity": 0.6818181818181819
+    },
+    {
+      "sequence": "KFFLIFKIILKKAIKVIR",
+      "reference": "KIKKIIKKIIKI",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KKTLLIALAKIKAAKKKIFAALFKI",
+      "reference": "KKLALALAKKWLALAKKLALALAKK",
+      "identity": 0.6799999999999999
+    },
+    {
+      "sequence": "KILKFIAAKIIKRFAKF",
+      "reference": "KWKLFAKIGIGKFLHLAKKF",
+      "identity": 0.6486486486486487
+    },
+    {
+      "sequence": "YKLLIKFGKAFKVFKKIKQISKPKFKAKKKLAAAKKFKKAAKFFAKIWKI",
+      "reference": "KFAKKFAKKFAKKFAKKFAKKFAKKFAKKFAK",
+      "identity": 0.5853658536585367
+    },
+    {
+      "sequence": "KVKLFLNKIAFVAWKNFKKLVLKVIKKLK",
+      "reference": "KKLLKKLKKLLKKL",
+      "identity": 0.6046511627906976
+    },
+    {
+      "sequence": "KTWKLKFIKLYAVAKKIFKVI",
+      "reference": "KWKLFKKIPKFLHAAKKF",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KWLLKIIKSAKNKVAKLIKIKAIKKASKKAKKFKKLNKKAKKGIKKAIKW",
+      "reference": "KKAKKKAKKKAKKKAKKKAKKKAKKKAK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KFLKILPIFKVVKKFFKAKAIKKIIK",
+      "reference": "KIIKKIKKKIKKIIK",
+      "identity": 0.6829268292682926
+    },
+    {
+      "sequence": "KFWLIKKLFKIAVKL",
+      "reference": "KWKLFKIGAVLKVL",
+      "identity": 0.7586206896551724
+    },
+    {
+      "sequence": "KKKLKFAAFVVIRWAKFFAIKIKAK",
+      "reference": "KFAKKFAKKFAKKFAKKFAK",
+      "identity": 0.6222222222222222
+    },
+    {
+      "sequence": "KFKKFITLAKIIFAKKLF",
+      "reference": "KFAKKFAKKFAKKFAK",
       "identity": 0.7058823529411764
     },
     {
-      "sequence": "VVWLKKIIGKIL",
-      "reference": "VNWKKILGKI",
+      "sequence": "KFKKAFIWKIFFKAVKLVVAKAF",
+      "reference": "FKAFKAFKAFKAFKAFKAFKAFKAFKA",
+      "identity": 0.64
+    },
+    {
+      "sequence": "KKLLKAKLKIVAKFAKKLKFAKILIA",
+      "reference": "LKALKKLAKKLKKLA",
+      "identity": 0.6829268292682926
+    },
+    {
+      "sequence": "KFFKKLIGSFINIAKKAIK",
+      "reference": "KFAKKFAKKFAK",
+      "identity": 0.6451612903225806
+    },
+    {
+      "sequence": "IWKLIIKAIVKWIAVLK",
+      "reference": "IKKIVSKIKKVLK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KKWLFSALIKSKAFLKFKKIF",
+      "reference": "GIKKWLHSAKKFGKKFVKKINS",
+      "identity": 0.6511627906976745
+    },
+    {
+      "sequence": "IWKLKLKLIIIIAKKLL",
+      "reference": "WKLFLKAVKKLL",
+      "identity": 0.6896551724137931
+    },
+    {
+      "sequence": "KKKLAKFIAIFAKIWALVKK",
+      "reference": "KRRKLAFRAFRFALKAVLKK",
+      "identity": 0.65
+    },
+    {
+      "sequence": "KLKFLKLVKKVLKKAIKAIKAFIKFKAIKKFKKKFKI",
+      "reference": "KLFGKLLKKLKKILKKIAKKIKKKL",
+      "identity": 0.6451612903225806
+    },
+    {
+      "sequence": "KAKLFKNLVKKILKALITISKFIK",
+      "reference": "KKLFKKILKYLKK",
+      "identity": 0.6486486486486487
+    },
+    {
+      "sequence": "KFKLKFILIFKAILKAKIK",
+      "reference": "FLFKLIPKAIKGLVKAIRK",
+      "identity": 0.6842105263157895
+    },
+    {
+      "sequence": "FWKAFLKIIIIVKKL",
+      "reference": "WKLFLKAVKKLL",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KWKIKILAKIIRKFL",
+      "reference": "KKLIKKILKIL",
+      "identity": 0.6923076923076923
+    },
+    {
+      "sequence": "KLKFKILGAIIFAKFLKFAKKI",
+      "reference": "KWKLFKKIGIGKFLKKK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KLWKIIIGIFKI",
+      "reference": "KKIGIWIGIKK",
+      "identity": 0.6956521739130435
+    },
+    {
+      "sequence": "KLLKKVKIFKKFIAAKIIFIKKNLAKAKFKAAFKKLKAKKKLAKK",
+      "reference": "KKAKKKAKKKAKKKAKKKAKKKAKKKAK",
+      "identity": 0.6575342465753424
+    },
+    {
+      "sequence": "KKLFFKIIKVKLVAGSVIFKL",
+      "reference": "GLFDIIKKVASVIGGL",
+      "identity": 0.6486486486486487
+    },
+    {
+      "sequence": "KNIAKVKFLKILIKIAKFAK",
+      "reference": "KIAKVALKALKIAKVALKAL",
+      "identity": 0.7
+    },
+    {
+      "sequence": "LKLAKALLFKAAKFKKAIAAFIAIKKL",
+      "reference": "KAAKKAAKAAKKAAKAAKKAA",
+      "identity": 0.625
+    },
+    {
+      "sequence": "GKFLIKLIKKLI",
+      "reference": "GFLSILKKVL",
       "identity": 0.7272727272727273
     },
     {
-      "sequence": "NWKIFKIIKKLL",
-      "reference": "GLKKIIKKLL",
+      "sequence": "KMFKFVIKIKFIKKVKKFAKAFKKAAKKVKKIWKILK",
+      "reference": "KFKKFKKFKKFKKFKKFKKFKKFKKFKKFK",
+      "identity": 0.6567164179104478
+    },
+    {
+      "sequence": "FKNFWKILGAKIIKKALKVF",
+      "reference": "VNWKKILGKIIKVAK",
+      "identity": 0.6857142857142857
+    },
+    {
+      "sequence": "KKLFKKILKKIIVKFNKKIAFKSKGKAAKKAAVKKLAFKKFLKILKIFK",
+      "reference": "KFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFKKFK",
+      "identity": 0.6352941176470588
+    },
+    {
+      "sequence": "IKNALKNIIKIVAKIFIKKIL",
+      "reference": "IKKIIKKIIKKI",
       "identity": 0.7272727272727273
     },
     {
-      "sequence": "FNWKKLAKGIIKVLI",
-      "reference": "VNWKKILAKIIKVVK",
-      "identity": 0.7333333333333334
+      "sequence": "KNKLIWILGFIKAIKIRKAL",
+      "reference": "KKLFKKILKAL",
+      "identity": 0.6451612903225806
     },
     {
-      "sequence": "INWKILAAIKKVF",
-      "reference": "INWKALLDAAKKVL",
-      "identity": 0.7407407407407407
+      "sequence": "KWFLLIKIKLLAKKAAKKFFK",
+      "reference": "FLSLIPKIKAVKALAKK",
+      "identity": 0.6842105263157895
     },
     {
-      "sequence": "KWNKFKGIIFIAKLKISKKIF",
+      "sequence": "KWKLFYILGKAFKKIVVKAI",
+      "reference": "IKKIGKKAAKKVIVKAIQAI",
+      "identity": 0.65
+    },
+    {
+      "sequence": "KINSKVIWKNIAKLIAAALKFPKIL",
+      "reference": "FAKIIAKIAKIAKKIL",
+      "identity": 0.6341463414634146
+    },
+    {
+      "sequence": "KNKLFKAIKFLIAKSALKAISAFKK",
+      "reference": "KKFKKTAKWLIKSAWLLLKSLALKMK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "GWWFKIILKLIK",
+      "reference": "GKWKKILGKLIR",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KWAWLKLLKLIIL",
+      "reference": "KLALKLLKLL",
+      "identity": 0.782608695652174
+    },
+    {
+      "sequence": "KVFLKIAFIKIFAKAAKFI",
+      "reference": "FLPKIFKKIAKKI",
+      "identity": 0.6875
+    },
+    {
+      "sequence": "KLFFKLFIKIWKL",
+      "reference": "KLFKKLFKKLFK",
+      "identity": 0.72
+    },
+    {
+      "sequence": "KFKVFIKIIAKSAKKIFAAKKIAKFIKNIGKAIFK",
+      "reference": "KFAKKFAKKFAKKFAKKFAKKFAKKFAK",
+      "identity": 0.6349206349206349
+    },
+    {
+      "sequence": "KLFAIKKRFIGIKKFLAKIALK",
+      "reference": "KFAKKFAKKFAKKFAK",
+      "identity": 0.6842105263157895
+    },
+    {
+      "sequence": "RLLKKFKIKKVKRIKKSAIKAKAIKKFAKKAFKIAKKFK",
+      "reference": "KFAKKFAKKFAKKFAKKFAKKFAKKFAKKFAK",
+      "identity": 0.676056338028169
+    },
+    {
+      "sequence": "KWKFLKIIVIKLKAKIKVAKI",
       "reference": "WKKIKKIIKKIKKI",
       "identity": 0.6857142857142857
     },
     {
-      "sequence": "INWKKVLKKFKIAVKIL",
-      "reference": "INWKKLGKKILGAL",
-      "identity": 0.7096774193548387
+      "sequence": "KFNIKKKLFSVIAKFAAKIKKIL",
+      "reference": "KILKRLAAKIKKIL",
+      "identity": 0.6486486486486487
     },
     {
-      "sequence": "NWKLIIKVAKIL",
-      "reference": "VNWKKVLGKIIKVAK",
-      "identity": 0.7407407407407407
+      "sequence": "NNFKKIFIKAIIKVAKLLL",
+      "reference": "VNWKKILGKIIKVAK",
+      "identity": 0.6470588235294117
     },
     {
-      "sequence": "KKINFKVIKKFIKGIL",
-      "reference": "KKLIKKILKIL",
+      "sequence": "KNFLIIAALKNIAKFKKLAKLF",
+      "reference": "KWKLLKKIPKFKKLALKF",
+      "identity": 0.65
+    },
+    {
+      "sequence": "FVLKFKKIAVIKAKLFKIKLALK",
+      "reference": "FALAKLAKKAKAKLKKALKAL",
+      "identity": 0.6818181818181819
+    },
+    {
+      "sequence": "KFLKFIALAKWKKFKKLIVFYAK",
+      "reference": "KFAKKFAKKFAKKFAK",
       "identity": 0.6666666666666667
     },
     {
-      "sequence": "INWKLIGIIKKIL",
-      "reference": "INWLKLGKKILGA",
-      "identity": 0.7692307692307692
+      "sequence": "RWILAILIKLVKKKL",
+      "reference": "RLILIKKKW",
+      "identity": 0.6666666666666667
     },
     {
-      "sequence": "GWKLFIIIAKKL",
-      "reference": "WKLFKKILKKL",
-      "identity": 0.6956521739130435
+      "sequence": "KWIGKIIGKIVL",
+      "reference": "KWRIGKKIVLA",
+      "identity": 0.782608695652174
     },
     {
-      "sequence": "KKWFFVKAIIVFLK",
-      "reference": "KKFGKAFVKILK",
-      "identity": 0.6923076923076923
+      "sequence": "IFKKLILFAKIIRVKSKIKFKALAK",
+      "reference": "FAKKLAKKLKKLAKLALAK",
+      "identity": 0.6363636363636364
     },
     {
-      "sequence": "NWGLFKIIKGLL",
-      "reference": "GLLKIIKKLL",
-      "identity": 0.7272727272727273
+      "sequence": "IWKIIKGILKKI",
+      "reference": "IKKIIKKIIKKI",
+      "identity": 0.75
     },
     {
-      "sequence": "IWKKLLNIIKKLV",
-      "reference": "IDWKKLNAKKIL",
-      "identity": 0.72
+      "sequence": "NRWLLAKIIRILK",
+      "reference": "RLLFRKIRRLKR",
+      "identity": 0.64
     },
     {
-      "sequence": "NWWKFLSIAKIL",
-      "reference": "INWKKLLDAAKQIL",
-      "identity": 0.6153846153846154
+      "sequence": "IAWLKKAIWLIKVIK",
+      "reference": "KLKKIWWIKVKK",
+      "identity": 0.6666666666666667
     },
     {
-      "sequence": "NWKLLGKIKLVLF",
-      "reference": "VNWKKLGKIKVK",
-      "identity": 0.72
+      "sequence": "KIRVINFKSIAKIFAKKFILKAKLF",
+      "reference": "KIAGKIAKIAKKIAK",
+      "identity": 0.65
     },
     {
-      "sequence": "KWKKILGILKFL",
-      "reference": "KWKLFKKIGIGKFL",
-      "identity": 0.7692307692307692
+      "sequence": "VKAWIKILKLKLIVAWKV",
+      "reference": "VNWKKILKKIIKVAK",
+      "identity": 0.6666666666666667
+    },
+    {
+      "sequence": "KKKLFKSFLGFVIKIAKLVAK",
+      "reference": "FLKKAKKFGKAFVKILK",
+      "identity": 0.631578947368421
     }
   ],
   "length_histogram": {
-    "8": 83,
-    "9": 1045,
-    "10": 509,
-    "11": 586,
-    "12": 2966,
-    "13": 1807,
-    "14": 985,
-    "15": 1525,
-    "16": 1059,
-    "17": 1570,
-    "18": 1955,
-    "19": 1315,
-    "20": 2563,
-    "21": 3444,
-    "22": 1149,
-    "23": 1157,
-    "24": 1764,
-    "25": 1721,
-    "26": 1179,
-    "27": 1141,
-    "28": 1150,
-    "29": 1437,
-    "30": 1238,
-    "31": 1014,
-    "32": 911,
-    "33": 1385,
-    "34": 949,
-    "35": 1168,
-    "36": 1224,
-    "37": 1368,
-    "38": 857,
-    "39": 699,
-    "40": 741,
-    "41": 638,
-    "42": 561,
-    "43": 696,
-    "44": 716,
-    "45": 524,
-    "46": 703,
-    "47": 552,
-    "48": 310,
-    "49": 315,
-    "50": 1321
+    "8": 48,
+    "9": 1009,
+    "10": 592,
+    "11": 887,
+    "12": 4534,
+    "13": 2338,
+    "14": 1111,
+    "15": 1627,
+    "16": 1055,
+    "17": 1548,
+    "18": 1978,
+    "19": 1283,
+    "20": 2520,
+    "21": 3251,
+    "22": 1059,
+    "23": 1022,
+    "24": 1580,
+    "25": 1519,
+    "26": 1030,
+    "27": 993,
+    "28": 955,
+    "29": 1196,
+    "30": 1030,
+    "31": 886,
+    "32": 814,
+    "33": 1254,
+    "34": 874,
+    "35": 1089,
+    "36": 1166,
+    "37": 1301,
+    "38": 828,
+    "39": 670,
+    "40": 713,
+    "41": 619,
+    "42": 546,
+    "43": 684,
+    "44": 707,
+    "45": 514,
+    "46": 697,
+    "47": 546,
+    "48": 308,
+    "49": 312,
+    "50": 1307
   },
   "reference_sha256": "2dff002bacfd14dfded24c494f49354dc4196a8d878ad965af98e80c031e90f5"
 }

@@ -120,64 +120,64 @@
     "fitting_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
     "statistics": {
       "amp_probability": {
-        "mean": 0.9895516127983902,
-        "std": 0.022022516793475323,
+        "mean": 0.9903807341138512,
+        "std": 0.020095974544899396,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "broad_spectrum_probability": {
-        "mean": 0.05211151874267653,
-        "std": 0.014763755150890357,
+        "mean": 0.05377785840859203,
+        "std": 0.019534388901129324,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "mean_activity_probability": {
-        "mean": 0.09480685488360102,
-        "std": 0.07963234677038321,
+        "mean": 0.10123649155798745,
+        "std": 0.09120616380454445,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "mean_gram_negative_activity_probability": {
-        "mean": 0.10016648693554742,
-        "std": 0.09024257219757495,
+        "mean": 0.10734241537917255,
+        "std": 0.10307470140874768,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "mean_gram_positive_activity_probability": {
-        "mean": 0.08542749879269508,
-        "std": 0.06323061912507355,
+        "mean": 0.09055112487091323,
+        "std": 0.07245600982723102,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "mean_mdr_activity_probability": {
-        "mean": 0.09933142376338835,
-        "std": 0.08531301698358909,
+        "mean": 0.1062835101652427,
+        "std": 0.09693712188423238,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "hemolysis_probability": {
-        "mean": 0.30918406869009674,
-        "std": 0.25617985121584574,
+        "mean": 0.3329302714393828,
+        "std": 0.21177830052810284,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "predicted_log2_mic_summary": {
-        "mean": 6.518086259937755,
-        "std": 0.6428289385965159,
+        "mean": 6.473374254757312,
+        "std": 0.7058653453618219,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
       },
       "predicted_log2_hc50": {
-        "mean": 7.367938003000413,
-        "std": 1.5523440724653168,
+        "mean": 7.097399201660212,
+        "std": 1.329354186886473,
         "count": 15652,
         "lower_clip": -5.0,
         "upper_clip": 5.0
@@ -228,9 +228,9 @@
       ]
     }
   },
-  "condition_table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5",
-  "condition_manifest_sha256": "6792c0f75b85f3d5ab9ec2d6e001d9c7adc1fcc3cff6c05ef78ac1fe07c196d4",
-  "property_model_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
+  "condition_table_sha256": "12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb",
+  "condition_manifest_sha256": "e798e72c86779ae3887776ccb5d4c71411478060784c0d44143dc0a8d470d517",
+  "property_model_checkpoint_sha256": "665dbf0536b8981dab9e3c637d217d82370bcf785d582751ab45e140e2e026dc",
   "measured_count": 5383,
   "pseudo_label_count": 53240,
   "training_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762"

@@ -1,9 +1,9 @@
 {
-  "model_name": "data/pretrained/esm2_t12_35M_UR50D",
+  "model_name": "data/pretrained/esm2_t30_150M_UR50D",
   "revision": null,
-  "pretrained_model_id": "facebook/esm2_t12_35M_UR50D",
-  "pretrained_revision": "6fbf070e65b0b7291e7bbcd451118c216cff79d8",
-  "model_revision": "local-sha256:3c4445ce42f7a6a5232949a2d5067acb28f89ce5986c21239547bd1c378795f1",
+  "pretrained_model_id": "facebook/esm2_t30_150M_UR50D",
+  "pretrained_revision": "a695f6045e2e32885fa60af20c13cb35398ce30c",
+  "model_revision": "local-sha256:760dcdd2fd1100b8aa2e7f75afa92b964544abb6b0615932ae403ee375ad35fc",
   "strain_ids": {
     "A01": 0,
     "A16": 1,
@@ -2984,8 +2984,8 @@
   },
   "unknown_strain_id": 1444,
   "strain_dim": 64,
-  "hidden_size": 480,
-  "best_val_loss": -0.17633938474467445,
+  "hidden_size": 640,
+  "best_val_loss": -0.18617412498131983,
   "train_count": 195241,
   "val_count": 23147,
   "test_count": 25435,
@@ -2998,7 +2998,7 @@
     "hemolysis": "binary hemolysis probability",
     "hc50": "log2 HC50 with censor-aware Gaussian likelihood"
   },
-  "inference_batch_size": 64,
+  "inference_batch_size": 16,
   "max_tokenized_length": 64,
   "training_data_manifest": "data/training/dataset_manifest.json",
   "seed": 42

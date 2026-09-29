@@ -3,20 +3,20 @@
   "artifacts": {
     "ctmc_checkpoint": {
       "path": "artifacts/ctmc/model.pt",
-      "sha256": "6639488f9b1c5ce110ebfea383b5b92d9f56f6e29a8786c311b97912125d70d4"
+      "sha256": "216da5c9febdb94e170cdfea76ebd65c2879893e17b0d01d2b7d04dce3767e47"
     },
     "property_checkpoint": {
       "path": "artifacts/property/model.pt",
-      "sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d"
+      "sha256": "665dbf0536b8981dab9e3c637d217d82370bcf785d582751ab45e140e2e026dc"
     },
     "property_files": [
       {
         "path": "artifacts/property/backbone/config.json",
-        "sha256": "043cc3f8953949129b8ad562558eb89838a4e87d664533c7bdcd2c068888fcae"
+        "sha256": "b8235bcad75869c534d72a6351372964ad28f6fab6a390b1eb2deaf5df34999e"
       },
       {
         "path": "artifacts/property/backbone/model.safetensors",
-        "sha256": "c894476e990f5b1cdc6cae3249616727da95e3960d4bdb77381efa1a6d291c49"
+        "sha256": "7cfe306e0aa3256f5d51b756e4b80268cb3396429aa2f13644a87f1c82b9fccf"
       },
       {
         "path": "artifacts/property/tokenizer/tokenizer_config.json",
@@ -29,7 +29,7 @@
     ],
     "property_metadata": {
       "path": "artifacts/property/model_metadata.json",
-      "sha256": "44cf3799702fed7261451614d3186a8324018564722d4b52b2a48309a771097d"
+      "sha256": "bd4399ac370f8a32a9ba6e8a7a3923fa266af5ba7037c034faa0f1a56b6d317e"
     },
     "reference_sequences": {
       "path": "data/antibacterial.fasta",
@@ -45,7 +45,7 @@
     }
   },
   "condition_cache": {
-    "manifest_sha256": "6792c0f75b85f3d5ab9ec2d6e001d9c7adc1fcc3cff6c05ef78ac1fe07c196d4",
+    "manifest_sha256": "e798e72c86779ae3887776ccb5d4c71411478060784c0d44143dc0a8d470d517",
     "semantic_definition": {
       "activity_temperature": 1.0,
       "activity_threshold_log2_mic": 4.0,
@@ -90,7 +90,7 @@
         ]
       }
     },
-    "table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5"
+    "table_sha256": "12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb"
   },
   "condition_semantics": {
     "activity_temperature": 1.0,
@@ -230,7 +230,7 @@
       "condition_dim": 9,
       "condition_dropout": 0.15,
       "condition_manifest_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl.manifest.json",
-      "condition_manifest_sha256": "6792c0f75b85f3d5ab9ec2d6e001d9c7adc1fcc3cff6c05ef78ac1fe07c196d4",
+      "condition_manifest_sha256": "e798e72c86779ae3887776ccb5d4c71411478060784c0d44143dc0a8d470d517",
       "condition_normalization": {
         "condition_names": [
           "amp_probability",
@@ -250,64 +250,64 @@
           "amp_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.9895516127983902,
-            "std": 0.022022516793475323,
+            "mean": 0.9903807341138512,
+            "std": 0.020095974544899396,
             "upper_clip": 5.0
           },
           "broad_spectrum_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.05211151874267653,
-            "std": 0.014763755150890357,
+            "mean": 0.05377785840859203,
+            "std": 0.019534388901129324,
             "upper_clip": 5.0
           },
           "hemolysis_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.30918406869009674,
-            "std": 0.25617985121584574,
+            "mean": 0.3329302714393828,
+            "std": 0.21177830052810284,
             "upper_clip": 5.0
           },
           "mean_activity_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.09480685488360102,
-            "std": 0.07963234677038321,
+            "mean": 0.10123649155798745,
+            "std": 0.09120616380454445,
             "upper_clip": 5.0
           },
           "mean_gram_negative_activity_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.10016648693554742,
-            "std": 0.09024257219757495,
+            "mean": 0.10734241537917255,
+            "std": 0.10307470140874768,
             "upper_clip": 5.0
           },
           "mean_gram_positive_activity_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.08542749879269508,
-            "std": 0.06323061912507355,
+            "mean": 0.09055112487091323,
+            "std": 0.07245600982723102,
             "upper_clip": 5.0
           },
           "mean_mdr_activity_probability": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 0.09933142376338835,
-            "std": 0.08531301698358909,
+            "mean": 0.1062835101652427,
+            "std": 0.09693712188423238,
             "upper_clip": 5.0
           },
           "predicted_log2_hc50": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 7.367938003000413,
-            "std": 1.5523440724653168,
+            "mean": 7.097399201660212,
+            "std": 1.329354186886473,
             "upper_clip": 5.0
           },
           "predicted_log2_mic_summary": {
             "count": 15652,
             "lower_clip": -5.0,
-            "mean": 6.518086259937755,
-            "std": 0.6428289385965159,
+            "mean": 6.473374254757312,
+            "std": 0.7058653453618219,
             "upper_clip": 5.0
           }
         }
@@ -368,7 +368,7 @@
         }
       },
       "condition_table_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl",
-      "condition_table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5",
+      "condition_table_sha256": "12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb",
       "confidence_reveal_fraction": 0.0,
       "ctmc_pretraining_mode": "none",
       "d_ff": 2048,
@@ -419,7 +419,7 @@
       "novelty_similarity_ceiling": 0.6,
       "official_identity_function": null,
       "property_metadata_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/property/model_metadata.json",
-      "property_model_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
+      "property_model_checkpoint_sha256": "665dbf0536b8981dab9e3c637d217d82370bcf785d582751ab45e140e2e026dc",
       "pseudo_label_count": 53240,
       "require_official_compliance": true,
       "resume_from": null,
@@ -481,8 +481,8 @@
   "property_model": {
     "backbone_dir": "artifacts/property/backbone",
     "checkpoint_format_version": 1,
-    "hidden_size": 480,
-    "inference_batch_size": 64,
+    "hidden_size": 640,
+    "inference_batch_size": 16,
     "inference_max_length": 64,
     "ranking_strains": [
       "A_baumannii_ATCC19606",

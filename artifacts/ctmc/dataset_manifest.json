@@ -5,7 +5,7 @@
   "checkpoint_version": 2,
   "cluster_split_manifest": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/processed/deadline_split_manifest.csv",
   "cluster_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
-  "code_commit": "2dbe71d1fd149ecea192c55a68a6cfe91d31cfeb",
+  "code_commit": "25053eb8d1f52cc506274f7f22cf82c710de71a8",
   "config": {
     "antibacterial_fasta_path": "data/antibacterial.fasta",
     "background_fasta_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/background.fasta",

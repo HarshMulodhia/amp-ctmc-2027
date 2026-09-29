@@ -12,8 +12,8 @@
   ],
   "kind": "conditioning_pseudo_labels",
   "measured_table_sha256": "79220540a7215b31ee3a356a00b4fcfd377c0ee64a8413cd70acb9051b650d54",
-  "property_checkpoint_sha256": "590f0ba46ced31d907670ebdec7e4d44eeea0f200132a95cded21d58fda3280d",
-  "property_metadata_sha256": "44cf3799702fed7261451614d3186a8324018564722d4b52b2a48309a771097d",
+  "property_checkpoint_sha256": "665dbf0536b8981dab9e3c637d217d82370bcf785d582751ab45e140e2e026dc",
+  "property_metadata_sha256": "bd4399ac370f8a32a9ba6e8a7a3923fa266af5ba7037c034faa0f1a56b6d317e",
   "ranking_strains": [
     "A_baumannii_ATCC19606",
     "E_coli_ATCC11775",
@@ -74,5 +74,5 @@
   },
   "source_fasta_sha256": "fbeafaba72deba55748060b2d0451195a9a3b7ddd26a30b0c8f3ec4db03cb8c2",
   "strain_panel_sha256": "bc103acdb6af696595cf0e91deff41a1e0583798ffc66daa43141b1c9976624e",
-  "table_sha256": "a7fff5a66859c75ddc4992b4c0e53a8dccb108b22ec45c05f6168ea8efe7f7a5"
+  "table_sha256": "12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb"
 }
