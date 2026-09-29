@@ -1,0 +1,33 @@
+{
+  "seed": 42,
+  "ctmc_steps": 64,
+  "oversampling_factor": 1.5,
+  "generation_batch_size": 2048,
+  "property_scoring_batch_size": 2048,
+  "library_count": 50000,
+  "top_count": 100,
+  "cfg_scale": 1.0,
+  "targets": {
+    "amp_probability": 0.95,
+    "broad_spectrum_probability": 0.8,
+    "mean_activity_probability": 0.85,
+    "mean_gram_negative_activity_probability": 0.85,
+    "mean_gram_positive_activity_probability": 0.85,
+    "mean_mdr_activity_probability": 0.85,
+    "hemolysis_probability": 0.02,
+    "predicted_log2_mic_summary": 4.0,
+    "predicted_log2_hc50": 8.0
+  },
+  "scoring_weights": {
+    "worst_log2_mic": 0.28,
+    "broad_spectrum_probability": 0.2,
+    "hemolysis_probability": 0.18,
+    "log2_hc50": 0.12,
+    "mean_activity_probability": 0.08,
+    "amp_probability": 0.06,
+    "mean_gram_negative_activity_probability": 0.03,
+    "mean_gram_positive_activity_probability": 0.02,
+    "mean_mdr_activity_probability": 0.03
+  },
+  "batch_size": 2048
+}
