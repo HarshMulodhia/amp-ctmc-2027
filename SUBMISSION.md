@@ -4,7 +4,7 @@
 
 **Requested tier:** Full (co-authorship eligibility)  
 **Repository:** https://github.com/HarshMulodhia/amp-ctmc-2027  
-**Frozen commit:** `0ff03c1`  
+**Frozen revision:** Git tag `full-submission-2026-09-30`
 **Reproducibility seed:** `42`
 
 ## Abstract
@@ -112,7 +112,8 @@ No candidate was manually edited, substituted, or hand-selected. All filtering, 
 ```bash
 git clone https://github.com/HarshMulodhia/amp-ctmc-2027.git
 cd amp-ctmc-2027
-git checkout 0ff03c1
+git fetch --tags
+git checkout full-submission-2026-09-30
 git lfs install
 git lfs pull
 uv sync
