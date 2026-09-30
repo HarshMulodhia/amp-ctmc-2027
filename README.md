@@ -44,7 +44,17 @@ CUDA is used when available; otherwise inference uses CPU. An RTX 4090-class GPU
 
 Training-data sources and provenance belong in [DATA.md](DATA.md) and the referenced `data/training/dataset_manifest.json`. External model details and limitations belong in [MODEL_CARD.md](MODEL_CARD.md). The implemented method and official-validator provenance are documented in [METHOD.md](METHOD.md) and [OFFICIAL_VALIDATOR_SOURCE.md](OFFICIAL_VALIDATOR_SOURCE.md).
 
-No trained CTMC or property-model checkpoint is included in this checkout. The checked-in manifest example contains placeholder hashes and is not a runnable model manifest.
+Trained CTMC and ESM-2 150M property checkpoints are included under `artifacts/` and `data/pretrained/esm2_t30_150M_UR50D/` via Git LFS. After a clean clone:
+
+```bash
+git lfs install
+git lfs pull
+uv sync
+uv run generate
+uv run python scripts/validate_submission.py
+```
+
+`artifacts/manifest.example.json` still contains placeholder hashes and is not a runnable model manifest; use `artifacts/manifest.json`.
 
 ## Training exports
 

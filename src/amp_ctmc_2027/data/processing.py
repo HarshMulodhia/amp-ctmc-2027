@@ -109,6 +109,7 @@ class CleaningResult:
 
 # --- Hashing & Manifest Utilities ---
 
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -137,6 +138,7 @@ def write_manifest(path: Path, data: dict) -> None:
 
 
 # --- Download Utilities ---
+
 
 def download_verified(url: str, destination: Path, expected_sha256: str) -> str:
     """Download once and verify SHA-256; never overwrite a mismatched existing artifact."""
@@ -169,6 +171,7 @@ def download_verified(url: str, destination: Path, expected_sha256: str) -> str:
 
 
 # --- Unit Conversion & Parsing Helpers ---
+
 
 def concentration_to_um(
     value: float, unit: str, molecular_weight_g_mol: float | None = None
@@ -217,6 +220,7 @@ def hemopi2_hemolysis_label(value: float) -> float:
 
 
 # --- Sequence Splitting & Homology Clustering ---
+
 
 def deterministic_sequence_split(sequence: str, seed: int = 42) -> str:
     """Stable exact-sequence hash split with nominal 80/10/10 proportions."""
@@ -327,6 +331,7 @@ def cluster_fasta(
 
 # --- Sequence Cleaning & Observation Normalization ---
 
+
 def _parse_bool(val: object, default: bool = True) -> bool:
     """Parse string or mixed-type boolean flags robustly."""
     if val is None:
@@ -373,13 +378,19 @@ def clean_observations(
         raw_sequence = str(row.get("sequence", ""))
         canonical, reason = clean_sequence(raw_sequence)
         if reason is not None:
-            rejected.append({"row_index": idx, "sequence": raw_sequence, "reason": reason})
+            rejected.append(
+                {"row_index": idx, "sequence": raw_sequence, "reason": reason}
+            )
             continue
         assert canonical is not None
 
         if canonical in forbidden:
             rejected.append(
-                {"row_index": idx, "sequence": canonical, "reason": "compliance_reference_overlap"}
+                {
+                    "row_index": idx,
+                    "sequence": canonical,
+                    "reason": "compliance_reference_overlap",
+                }
             )
             continue
 
@@ -387,7 +398,11 @@ def clean_observations(
         is_linear = _parse_bool(row.get("is_linear"), default=True)
         if not is_linear:
             rejected.append(
-                {"row_index": idx, "sequence": canonical, "reason": "modified_or_non_linear"}
+                {
+                    "row_index": idx,
+                    "sequence": canonical,
+                    "reason": "modified_or_non_linear",
+                }
             )
             continue
 
@@ -398,7 +413,11 @@ def clean_observations(
         ).lower()
         if any(term in mod_desc for term in MODIFICATION_TERMS):
             rejected.append(
-                {"row_index": idx, "sequence": canonical, "reason": "modified_or_non_linear"}
+                {
+                    "row_index": idx,
+                    "sequence": canonical,
+                    "reason": "modified_or_non_linear",
+                }
             )
             continue
 
@@ -420,9 +439,15 @@ def clean_observations(
                 source_record_id=str(row.get("source_record_id"))
                 if row.get("source_record_id") is not None
                 else None,
-                is_amp=float(is_amp) if is_amp is not None and str(is_amp).strip() else None,
-                organism=str(row.get("organism")) if row.get("organism") is not None else None,
-                strain=str(row.get("strain")) if row.get("strain") is not None else None,
+                is_amp=float(is_amp)
+                if is_amp is not None and str(is_amp).strip()
+                else None,
+                organism=str(row.get("organism"))
+                if row.get("organism") is not None
+                else None,
+                strain=str(row.get("strain"))
+                if row.get("strain") is not None
+                else None,
                 panel_target=str(row.get("panel_target"))
                 if row.get("panel_target") is not None
                 else None,

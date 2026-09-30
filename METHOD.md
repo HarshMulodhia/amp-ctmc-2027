@@ -16,4 +16,4 @@ The authoritative validator checks FASTA records/headers, exact counts, canonica
 
 ## Readiness status
 
-This repository contains no trained CTMC or property checkpoint. It also has no completed training-data manifest. No biological performance, generation speed, or memory measurements are claimed.
+This Full-tier checkout includes trained CTMC and ESM-2 150M property checkpoints, the pinned pretrained snapshot, disclosed training data, and frozen generation outputs under Git LFS. Biological performance claims remain model predictions, not experimental evidence.

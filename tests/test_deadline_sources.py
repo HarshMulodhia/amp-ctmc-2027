@@ -126,7 +126,7 @@ def test_all_prepared_observations_keep_one_global_sequence_split():
 
 
 def test_pinned_snapshot_loads_offline_when_bootstrapped(monkeypatch):
-    snapshot = ROOT / "data/pretrained/esm2_t12_35M_UR50D"
+    snapshot = ROOT / "data/pretrained/esm2_t30_150M_UR50D"
     if not snapshot.is_dir():
         pytest.skip("run deadline model bootstrap to exercise the local snapshot")
     monkeypatch.setenv("HF_HUB_OFFLINE", "1")

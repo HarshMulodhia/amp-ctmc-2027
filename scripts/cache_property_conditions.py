@@ -126,7 +126,7 @@ def main() -> None:
                 measured[seq] = row
         sequence_set = set(sequences)
         measured = {seq: row for seq, row in measured.items() if seq in sequence_set}
-        
+
     rows = []
     for i, seq in enumerate(sequences):
         mic = {

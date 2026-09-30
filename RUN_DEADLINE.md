@@ -3,11 +3,12 @@
 ## Hardware and scope
 
 The defaults target one NVIDIA RTX 4090 (24 GB VRAM), a recent CUDA runtime,
-and enough host RAM/disk for the ESM-2 35M snapshot and source tables. Property
-fine-tuning uses batch 64, token length 64, AMP when CUDA is available, four
-unfrozen transformer blocks, and three epochs. CTMC uses batch 64 and 20
-epochs. These are production settings; the `smoke` stage is separate and does
-not overwrite production artifacts.
+and enough host RAM/disk for the ESM-2 150M snapshot and source tables. Property
+fine-tuning uses the pinned local 150M snapshot (`configs/deadline_property_150m.json`),
+token length 64, mixed precision when CUDA is available, and two unfrozen
+transformer blocks for two epochs. CTMC uses batch 64 and 20 epochs. These are
+production settings; the `smoke` stage is separate and does not overwrite
+production artifacts.
 
 ## Pinned sources and terms
 
@@ -27,11 +28,12 @@ data directory.
 | AMPlify non-AMP negatives | [FASTA](https://zenodo.org/api/records/7320306/files/AMPlify_non_AMP_train_balanced.fa/content), same record | `02161c5d18ff8c5c8c712527fb84a9c51606a46b11ad987cd91c60306acd25a3` | Classifier negatives and CTMC background only; same Zenodo terms. Never included in positive FASTA. |
 | Organizer reference | Existing `data/antibacterial.fasta` | recorded in download manifest | Compliance checks only; not model supervision or background. Do not replace it. |
 
-The fixed ESM-2 snapshot is `facebook/esm2_t12_35M_UR50D` revision
-`6fbf070e65b0b7291e7bbcd451118c216cff79d8` from [Hugging Face](https://huggingface.co/facebook/esm2_t12_35M_UR50D/tree/6fbf070e65b0b7291e7bbcd451118c216cff79d8).
+The fixed ESM-2 snapshot is `facebook/esm2_t30_150M_UR50D` revision
+`a695f6045e2e32885fa60af20c13cb35398ce30c` from [Hugging Face](https://huggingface.co/facebook/esm2_t30_150M_UR50D/tree/a695f6045e2e32885fa60af20c13cb35398ce30c).
 Review the model card and license before redistribution. Its immutable starting
-copy is stored at `data/pretrained/esm2_t12_35M_UR50D/`; fine-tuned inference
-files are exported to `artifacts/property/{backbone,tokenizer,model.pt,model_metadata.json}`.
+copy is stored at `data/pretrained/esm2_t30_150M_UR50D/` (Git LFS); fine-tuned
+inference files are exported to
+`artifacts/property/{backbone,tokenizer,model.pt,model_metadata.json}`.
 
 ## Bootstrap
 
@@ -45,8 +47,8 @@ Equivalent explicit commands, useful for reruns:
 
 ```bash
 uv run python scripts/bootstrap_deadline_data.py
-uv run python scripts/download_deadline_model.py
 uv run python scripts/prepare_deadline_training_data.py
+# Optional: verify or refresh the bundled 150M snapshot
 uv run python scripts/download_deadline_model.py --offline-check
 ```
 
@@ -77,14 +79,15 @@ pipeline does not require MMseqs2 or CD-HIT.
 ./scripts/run_deadline_pipeline.sh validate
 ```
 
-The `property` stage fine-tunes three epochs from the local pinned ESM-2 35M
-snapshot. `cache` builds train-split measured conditions and fills missing
-fields with offline property predictions. `ctmc-conditioned` trains/resumes the
-existing CTMC architecture. The manifest stage hashes local artifacts. The
-generation contract requests exactly 50,000 unique valid peptides, ranks and
-writes exactly 100 top peptides, and emits `generate/scores.csv`. Validation
-runs both repository compliance checks and deterministic generation/hash
-rehearsal. No property model is run inside CTMC epochs.
+The `property` stage fine-tunes from the local pinned ESM-2 150M snapshot using
+`configs/deadline_property_150m.json`. `cache` builds train-split measured
+conditions and fills missing fields with offline property predictions.
+`ctmc-conditioned` trains/resumes the existing CTMC architecture. The manifest
+stage hashes local artifacts. The generation contract requests exactly 50,000
+unique valid peptides, ranks and writes exactly 100 top peptides, and emits
+`generate/scores.csv`. Validation runs both repository compliance checks and
+deterministic generation/hash rehearsal. No property model is run inside CTMC
+epochs.
 
 The unconditional fallback is trained separately:
 

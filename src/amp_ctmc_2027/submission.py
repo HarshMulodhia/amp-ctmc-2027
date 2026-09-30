@@ -855,7 +855,11 @@ def generate_from_manifest(
     eligible_top_indices: list[int] = []
     for index in ranked_indices:
         seq = candidates[index]
-        if not ref_targets or max(official_identity(seq, ref) for ref in ref_targets) <= TOP_IDENTITY_LIMIT:
+        if (
+            not ref_targets
+            or max(official_identity(seq, ref) for ref in ref_targets)
+            <= TOP_IDENTITY_LIMIT
+        ):
             eligible_top_indices.append(index)
         if len(eligible_top_indices) == top_count:
             break
@@ -866,7 +870,7 @@ def generate_from_manifest(
         )
 
     top = [candidates[index] for index in eligible_top_indices]
-    
+
     output_dir = output_dir or Path(manifest["outputs"]["library"]).parent
     output_path = _root_path(root, str(output_dir))
     library_path, top_path = output_path / "library.fasta", output_path / "top.fasta"

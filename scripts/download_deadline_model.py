@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Download or offline-verify the pinned ESM-2 35M snapshot."""
+"""Verify the bundled ESM-2 150M snapshot (offline check) or download it from HuggingFace.
+
+The production snapshot (facebook/esm2_t30_150M_UR50D) is committed to this
+repository under data/pretrained/esm2_t30_150M_UR50D/ via Git LFS.  A clean
+clone should already have all files — this script is provided only as a
+convenience for environments where Git LFS was not pulled or where the snapshot
+must be refreshed from the canonical HuggingFace revision.
+"""
 
 from __future__ import annotations
 
@@ -9,9 +16,11 @@ import json
 import os
 from pathlib import Path
 
-MODEL_ID = "facebook/esm2_t12_35M_UR50D"
-REVISION = "6fbf070e65b0b7291e7bbcd451118c216cff79d8"
-DESTINATION = Path(__file__).resolve().parents[1] / "data/pretrained/esm2_t12_35M_UR50D"
+MODEL_ID = "facebook/esm2_t30_150M_UR50D"
+REVISION = "a695f6045e2e32885fa60af20c13cb35398ce30c"
+DESTINATION = (
+    Path(__file__).resolve().parents[1] / "data/pretrained/esm2_t30_150M_UR50D"
+)
 RESIDUES = "ACDEFGHIKLMNPQRSTVWY"
 
 
@@ -61,7 +70,11 @@ def main() -> None:
             local_dir_use_symlinks=False,
         )
     if not path.is_dir():
-        raise FileNotFoundError(f"Pinned local model snapshot is absent: {path}")
+        raise FileNotFoundError(
+            f"ESM-2 150M snapshot is absent: {path}\n"
+            "Run `git lfs pull` to restore the bundled snapshot, or run this "
+            "script without --offline-check to download from HuggingFace."
+        )
     verify(path)
     files = [
         {

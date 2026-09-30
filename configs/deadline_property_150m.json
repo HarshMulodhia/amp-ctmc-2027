@@ -11,7 +11,7 @@
   "gradient_accumulation_steps": 1,
   "seed": 42,
   "early_stopping": true,
-  "output": "artifacts/property_150m",
+  "output": "artifacts/property",
   "activity_threshold_log2_mic": 4.0,
   "activity_temperature": 1.0,
   "broad_spectrum_aggregation": {"method": "minimum"},

@@ -7,15 +7,14 @@ stage="${1:-}"
 case "$stage" in
   bootstrap)
     uv run python scripts/bootstrap_deadline_data.py
-    uv run python scripts/download_deadline_model.py
     uv run python scripts/prepare_deadline_training_data.py
-    uv run python -c 'import json; p="data/audit/deadline_source_counts.json"; print(json.dumps(json.load(open(p)), indent=2)); print("Outputs: data/raw/deadline, data/pretrained/esm2_t12_35M_UR50D, data/processed/deadline_observations.parquet, data/processed/deadline_split_manifest.csv, data/training/training.fasta, data/training/background.fasta")'
+    uv run python -c 'import json; p="data/audit/deadline_source_counts.json"; print(json.dumps(json.load(open(p)), indent=2)); print("Outputs: data/raw/deadline, data/pretrained/esm2_t30_150M_UR50D (bundled), data/processed/deadline_observations.parquet, data/processed/deadline_split_manifest.csv, data/training/training.fasta, data/training/background.fasta")'
     ;;
   smoke)
     uv run python scripts/deadline_smoke.py
     ;;
   property)
-    uv run python scripts/train_property_model.py --config configs/deadline_property_35m.json --data data/processed/deadline_observations.parquet --output artifacts/property
+    uv run python scripts/train_property_model.py --config configs/deadline_property_150m.json --data data/processed/deadline_observations.parquet --output artifacts/property
     ;;
   cache)
     mkdir -p artifacts/conditions

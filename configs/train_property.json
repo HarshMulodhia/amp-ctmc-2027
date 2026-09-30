@@ -11,7 +11,6 @@
     "mdr": []
   },
   "sequence_clustering_threshold": 0.4,
-  "fallback_model_name": "facebook/esm2_t12_35M_UR50D",
   "max_length": 50,
   "frozen_head_epochs": 3,
   "unfreeze_last_n_layers": 6,

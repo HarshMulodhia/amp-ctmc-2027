@@ -11,3 +11,8 @@ wheels/
 
 # Execution and pipeline log outputs
 logs/
+# Local caches
+.pytest_cache/
+.ruff_cache/
+# Local archive of non-release / unused materials
+trash/

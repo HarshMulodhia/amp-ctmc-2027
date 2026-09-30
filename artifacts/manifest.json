@@ -219,17 +219,17 @@
     "checkpoint_format_version": 2,
     "config": {
       "antibacterial_fasta_path": "data/antibacterial.fasta",
-      "background_fasta_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/background.fasta",
+      "background_fasta_path": "data/training/background.fasta",
       "batch_size": 64,
       "candidate_pool_size": 120000,
       "canvas_semantics": "residues_plus_eos",
       "cfg_scale": 1.5,
-      "checkpoint_dir": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/ctmc",
+      "checkpoint_dir": "artifacts/ctmc",
       "checkpoint_version": 2,
-      "cluster_split_manifest_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/processed/deadline_split_manifest.csv",
+      "cluster_split_manifest_path": "data/processed/deadline_split_manifest.csv",
       "condition_dim": 9,
       "condition_dropout": 0.15,
-      "condition_manifest_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl.manifest.json",
+      "condition_manifest_path": "artifacts/conditions/deadline_conditions.jsonl.manifest.json",
       "condition_manifest_sha256": "e798e72c86779ae3887776ccb5d4c71411478060784c0d44143dc0a8d470d517",
       "condition_normalization": {
         "condition_names": [
@@ -367,7 +367,7 @@
           ]
         }
       },
-      "condition_table_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/conditions/deadline_conditions.jsonl",
+      "condition_table_path": "artifacts/conditions/deadline_conditions.jsonl",
       "condition_table_sha256": "12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb",
       "confidence_reveal_fraction": 0.0,
       "ctmc_pretraining_mode": "none",
@@ -418,7 +418,7 @@
       "n_sequences": 50000,
       "novelty_similarity_ceiling": 0.6,
       "official_identity_function": null,
-      "property_metadata_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/artifacts/property/model_metadata.json",
+      "property_metadata_path": "artifacts/property/model_metadata.json",
       "property_model_checkpoint_sha256": "665dbf0536b8981dab9e3c637d217d82370bcf785d582751ab45e140e2e026dc",
       "pseudo_label_count": 53240,
       "require_official_compliance": true,
@@ -443,7 +443,7 @@
       "teacher_revision": null,
       "top_identity_ceiling": 0.8,
       "top_k": 100,
-      "training_fasta_path": "/home/mr-team/PhysicalAI/users/Harsh/amp/amp-ctmc-2027/data/training/training.fasta",
+      "training_fasta_path": "data/training/training.fasta",
       "training_mode": "property_conditioned",
       "training_split_sha256": "800b1e1e873c0503218758ea1eb49525a4e9e3e5cc35bc6fe5b80611eb62b762",
       "val_fraction": 0.1,

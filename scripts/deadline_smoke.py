@@ -90,11 +90,11 @@ def main() -> None:
         )
 
         property_config = json.loads(
-            (ROOT / "configs/deadline_property_35m.json").read_text()
+            (ROOT / "configs/deadline_property_150m.json").read_text()
         )
         property_config.update(
             {
-                "model_name": str(ROOT / "data/pretrained/esm2_t12_35M_UR50D"),
+                "model_name": str(ROOT / "data/pretrained/esm2_t30_150M_UR50D"),
                 "epochs": 1,
                 "batch_size": 8,
                 "max_length": 64,
