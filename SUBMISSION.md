@@ -4,7 +4,7 @@
 
 **Requested tier:** Full (co-authorship eligibility)  
 **Repository:** https://github.com/HarshMulodhia/amp-ctmc-2027  
-**Frozen commit:** `99490e2`  
+**Frozen commit:** `0ff03c1`  
 **Reproducibility seed:** `42`
 
 ## Abstract
@@ -112,7 +112,7 @@ No candidate was manually edited, substituted, or hand-selected. All filtering, 
 ```bash
 git clone https://github.com/HarshMulodhia/amp-ctmc-2027.git
 cd amp-ctmc-2027
-git checkout 99490e2
+git checkout 0ff03c1
 git lfs install
 git lfs pull
 uv sync
@@ -124,10 +124,11 @@ uv run python scripts/rehearse_submission.py
 ### Frozen hashes
 
 ```text
-8b072a9b5579793ac3d7a229345b28c71d5b5a7a1b81f6ff37197bd12fd63833  generate/library.fasta
+4770d5e26baa35269e24069dff934943b46a4cbc06961f66f955d8e966c54183  generate/library.fasta
 2e8e01ab83c4c9a8eda2e85b1d3b68c8a37b2f904c04299b6e30f7f493c9ec84  generate/top.fasta
-0bbde936a8d5e65ecd6d247ee7843742a894b1ff864fc8c9b3791288cf58222f  generate/scores.csv
+9906fc093e9985438de30f52851be40ed65e9f4bc1367e789681bdf10721b895  generate/scores.csv
 0910981748c82b39dd159ba111d87a41ac7db971f7491e7df1fe5147ca5d3051  artifacts/manifest.json
+12fd4d0f14469957303a66709df071fc9df96c6dcae825900286dd6242673eeb  artifacts/conditions/deadline_conditions.jsonl
 ```
 
 A clean clone with Git LFS, dependency synchronization, generation, and validation reproduced these hashes. The deterministic rehearsal generated the library and top 100 twice and obtained identical outputs.
@@ -147,6 +148,6 @@ This entry requests Full participation and co-authorship eligibility. The public
 
 ## Contributor statement
 
-**Harsh Mulodhia:** Conceptualization; methodology; software; data curation; model training; validation; formal analysis; reproducibility; documentation; submission preparation.
+**Harsh Mulodhia, Drona Manan Bajaj:** Conceptualization; methodology; software; data curation; model training; validation; formal analysis; reproducibility; documentation; submission preparation.
 
 Add only genuine contributors and their actual roles. Do not list competition organizers as contributors merely because they have repository access.
