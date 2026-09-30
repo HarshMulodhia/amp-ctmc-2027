@@ -151,4 +151,6 @@ This entry requests Full participation and co-authorship eligibility. The public
 
 **Harsh Mulodhia, Drona Manan Bajaj:** Conceptualization; methodology; software; data curation; model training; validation; formal analysis; reproducibility; documentation; submission preparation.
 
+**Drona Manan Bajaj contact:** dronabajajofficial@gmail.com; GitHub: [@dbajaj123](https://github.com/dbajaj123).
+
 Add only genuine contributors and their actual roles. Do not list competition organizers as contributors merely because they have repository access.
